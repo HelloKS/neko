@@ -6,6 +6,10 @@
           <i class="fas fa-comment-alt" />
           <span>{{ $t('side.chat') }}</span>
         </li>
+        <li :class="{ active: tab === 'members' }" @click.stop.prevent="change('members')">
+          <i class="fas fa-user" />
+          <span>{{ $t('side.members')  + ' (' + membersCount + ')'}}</span>
+        </li>
         <li v-if="filetransferAllowed" :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
           <i class="fas fa-file" />
           <span>{{ $t('side.files') }}</span>
@@ -20,6 +24,7 @@
       <neko-chat v-if="tab === 'chat'" />
       <neko-files v-if="tab === 'files'" />
       <neko-settings v-if="tab === 'settings'" />
+      <neko-members v-if="tab === 'members'" />
     </div>
   </aside>
 </template>
@@ -84,6 +89,7 @@
   import Settings from '~/components/settings.vue'
   import Chat from '~/components/chat.vue'
   import Files from '~/components/files.vue'
+  import Members from '~/components/members.vue'
 
   @Component({
     name: 'neko',
@@ -91,6 +97,7 @@
       'neko-settings': Settings,
       'neko-chat': Chat,
       'neko-files': Files,
+      'neko-members': Members,
     },
   })
   export default class extends Vue {
@@ -102,6 +109,19 @@
 
     get tab() {
       return this.$accessor.client.tab
+    }
+
+    get membersCount() {
+      var members = this.$accessor.user.members
+      var curMembers = 0;
+
+      Object.keys(members).forEach(function(key) {
+        if (members[key].connected) {
+          curMembers++;
+        }
+      });
+
+      return curMembers;
     }
 
     @Watch('tab', { immediate: true })

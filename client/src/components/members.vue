@@ -30,8 +30,7 @@
 <style lang="scss" scoped>
   .members {
     flex: 1;
-    overflow-x: scroll;
-    overflow-y: hidden;
+    overflow-y: scroll;
     padding-bottom: 14px;
     scrollbar-width: thin;
     scrollbar-color: $background-secondary $background-tertiary;

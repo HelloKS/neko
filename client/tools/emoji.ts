@@ -43,7 +43,7 @@ interface EmojiDatasource {
   obsoleted_by: string
 }
 
-const SHEET_COLUMNS = 58
+const SHEET_COLUMNS = 62
 const MULTIPLY = 100 / (SHEET_COLUMNS - 1)
 
 const css: string[] = []
@@ -63,8 +63,8 @@ for (const emoji of custom) {
 for (const source of datasource) {
   const unified = source.unified.split('-').map(v => v.toLowerCase())
 
-  if (!source.has_img_twitter) {
-    console.log(source.short_name, 'not avalible for set twitter')
+  if (!source.has_img_apple) {
+    console.log(source.short_name, 'not avalible for set apple')
     continue
   }
 
@@ -146,7 +146,7 @@ fs.writeFile(
 .emoji {
   display: inline-block;
   background-size: ${SHEET_COLUMNS * 100}%;
-  background-image: url('~emoji-datasource/img/twitter/sheets/32.png');
+  background-image: url('~emoji-datasource/img/apple/sheets/32.png');
   background-repeat: no-repeat;
   vertical-align: bottom;
   height: 22px;
