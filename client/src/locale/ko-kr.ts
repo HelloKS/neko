@@ -89,6 +89,7 @@ export const setting = {
   chat_sound: '채팅 소리 재생',
   keyboard_layout: '키보드 레이아웃',
   broadcast_title: '실시간 방송',
+  ui_language: '인터페이스 언어',
 }
 
 export const connection = {

@@ -46,13 +46,9 @@
 
 <style lang="scss">
   #neko {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-width: 100dvw;
-    max-height: 100dvh;
+    position: relative;
+    width: 100dvw;
+    height: 100dvh;
     flex-direction: row;
     display: flex;
 

@@ -1,6 +1,5 @@
 <template>
   <ul>
-    <li><i @click.stop.prevent="about" class="fas fa-question-circle" /></li>
     <li>
       <i
         class="fas fa-shield-alt"
@@ -12,13 +11,6 @@
         }"
         v-if="admin"
       />
-    </li>
-    <li>
-      <select v-model="$i18n.locale">
-        <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">
-          {{ lang }}
-        </option>
-      </select>
     </li>
   </ul>
 </template>
@@ -61,7 +53,6 @@
 
 <script lang="ts">
   import { Component, Vue } from 'vue-property-decorator'
-  import { messages } from '~/locale'
 
   @Component({ name: 'neko-menu' })
   export default class extends Vue {
@@ -69,19 +60,9 @@
       return this.$accessor.user.admin
     }
 
-    get langs() {
-      return Object.keys(messages)
-    }
-
     about() {
       this.$accessor.client.toggleAbout()
     }
 
-    mounted() {
-      const default_lang = new URL(location.href).searchParams.get('lang')
-      if (default_lang && this.langs.includes(default_lang)) {
-        this.$i18n.locale = default_lang
-      }
-    }
   }
 </script>

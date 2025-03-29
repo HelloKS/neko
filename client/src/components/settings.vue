@@ -36,6 +36,15 @@
         </label>
       </li>
       <li>
+        <span>{{ $t('setting.ui_language') }}</span>
+        <label class="select">
+          <select v-model="$i18n.locale">
+            <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">{{ lang }}</option>
+          </select>
+          <span />
+        </label>
+      </li>
+      <li>
         <span>{{ $t('setting.keyboard_layout') }}</span>
         <label class="select">
           <select v-model="keyboard_layout">
@@ -305,6 +314,7 @@
 
 <script lang="ts">
   import { Component, Watch, Vue } from 'vue-property-decorator'
+  import { messages } from '~/locale'
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
@@ -312,6 +322,10 @@
 
     get admin() {
       return this.$accessor.user.admin
+    }
+
+    get langs() {
+      return Object.keys(messages)
     }
 
     get connected() {

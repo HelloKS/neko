@@ -4,19 +4,16 @@
       <ul>
         <li :class="{ active: tab === 'chat' }" @click.stop.prevent="change('chat')">
           <i class="fas fa-comment-alt" />
-          <span>{{ $t('side.chat') }}</span>
         </li>
         <li :class="{ active: tab === 'members' }" @click.stop.prevent="change('members')">
           <i class="fas fa-user" />
-          <span>{{ $t('side.members')  + ' (' + membersCount + ')'}}</span>
+          <span>{{'(' + membersCount + ')'}}</span>
         </li>
         <li v-if="filetransferAllowed" :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
           <i class="fas fa-file" />
-          <span>{{ $t('side.files') }}</span>
         </li>
         <li :class="{ active: tab === 'settings' }" @click.stop.prevent="change('settings')">
           <i class="fas fa-sliders-h" />
-          <span>{{ $t('side.settings') }}</span>
         </li>
       </ul>
     </div>
@@ -41,7 +38,7 @@
 
     .tabs-container {
       background: $background-tertiary;
-      height: $menu-height;
+      height: fit-content;
       max-height: 100%;
       max-width: 100%;
       display: flex;
@@ -49,7 +46,7 @@
 
       ul {
         display: inline-block;
-        padding: 16px 0 0 0;
+        padding: 0.5rem 0 0 0;
 
         li {
           background: $background-secondary;
@@ -62,8 +59,11 @@
           cursor: pointer;
 
           i {
-            margin-right: 4px;
-            font-size: 10px;
+            font-size: 1.3rem;
+          }
+
+          span {
+            margin-left: 4px;
           }
 
           &.active {

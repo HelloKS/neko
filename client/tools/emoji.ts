@@ -149,8 +149,8 @@ fs.writeFile(
   background-image: url('~emoji-datasource/img/apple/sheets/32.png');
   background-repeat: no-repeat;
   vertical-align: bottom;
-  height: 22px;
-  width: 22px;
+  height: 32px;
+  width: 32px;
 
 ${css.map(v => `  ${v}`).join('\n')}
 }
