@@ -7,31 +7,46 @@ export const custom = [
   {
     name: 'goosmile',
     file: 'him.png',
-    keywords: ['neko', 'goosmile', 'him', 'smile'],
+    keywords: ['goo', 'goosmile', 'him', 'smile'],
+  },
+  {
+    name: 'goosad',
+    file: 'himsad.png',
+    keywords: ['goo', 'goosad', 'him', 'sad'],
   },
   {
     name: 'pepeyas',
     file: 'pepe_yas.png',
-    keywords: ['neko', 'pepeyas', 'sex', 'pepe'],
+    keywords: ['yas', 'pepeyas', 'sex', 'pepe'],
   },
   {
     name: 'pepeno',
     file: 'pepe_no.png',
-    keywords: ['neko', 'pepeno', 'bad', 'pepe'],
+    keywords: ['fuck', 'pepeno', 'bad', 'pepe'],
   },
   {
     name: 'pepesad',
     file: 'pepe_sad.png',
-    keywords: ['neko', 'pepesad', 'no', 'pepe'],
+    keywords: ['sad', 'pepesad', 'no', 'pepe'],
   },
   {
     name: 'pepepunch',
     file: 'pepe_punch.png',
-    keywords: ['neko', 'pepepunch', 'no', 'pepe'],
+    keywords: ['punch', 'pepepunch', 'no', 'pepe'],
   },
   {
     name: 'pepewtf',
     file: 'pepe_wtf.png',
-    keywords: ['neko', 'pepewtf', 'no', 'shit', 'pepe'],
+    keywords: ['wtf', 'pepewtf', 'no', 'shit', 'pepe'],
+  },
+  {
+    name: 'pepegod',
+    file: 'pepe_god.png',
+    keywords: ['wtf', 'pepegod', 'no', 'holy', 'pepe'],
+  },
+  {
+    name: 'pepeangry',
+    file: 'pepe_anger.png',
+    keywords: ['wtf', 'pepeangry', 'shit', 'no', 'fuck', 'pepe'],
   },
 ]
