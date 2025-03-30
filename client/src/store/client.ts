@@ -5,8 +5,6 @@ export const namespaced = true
 
 export const state = () => ({
   side: get<boolean>('side', false),
-  bottom: get<boolean>('bottom', true),
-  side_to_bottom: get<boolean>('side-to-bottom', false),
   tab: get<string>('tab', 'chat'),
   about: false,
   about_page: '',
@@ -29,14 +27,6 @@ export const mutations = mutationTree(state, {
     state.side = !state.side
     set('side', state.side)
   },
-  toggleBottom(state) {
-    state.bottom = !state.bottom
-    set('bottom', state.bottom)
-  },
-  toggleSideToBottom(state) {
-    state.side_to_bottom = !state.side_to_bottom
-    set('side-to-bottom', state.side_to_bottom)
-  }
 })
 
 export const actions = actionTree({ state, getters, mutations }, {})

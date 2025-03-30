@@ -16,7 +16,7 @@
             @control-attempt="controlAttempt"
           />
         </div>
-        <div v-if="!videoOnly && !hideControls && bottom" class="room-container">
+        <div v-if="!videoOnly && !hideControls" class="room-container">
           <div class="room-menu">
             <div class="settings">
               <neko-menu />
@@ -268,14 +268,6 @@
 
     get side() {
       return this.$accessor.client.side
-    }
-
-    get side_to_bottom() {
-      return this.$accessor.client.side_to_bottom
-    }
-
-    get bottom() {
-      return this.$accessor.client.bottom
     }
 
     get connected() {

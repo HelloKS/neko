@@ -174,14 +174,6 @@
       return this.$accessor.client.side
     }
 
-    get side_to_bottom() {
-      return this.$accessor.client.side_to_bottom
-    }
-
-    get bottom() {
-      return this.$accessor.client.bottom
-    }
-
     get texts() {
       return this.$accessor.chat.texts
     }
@@ -206,14 +198,6 @@
     toggleMenu() {
       this.$accessor.client.toggleSide()
       this.readTexts = this.texts
-    }
-
-    toggleBottomMenu() {
-      this.$accessor.client.toggleBottom()
-    }
-
-    toggleSideToBottom() {
-      this.$accessor.client.toggleSideToBottom()
     }
 
     lockedTooltip(resource: AdminLockResource) {
