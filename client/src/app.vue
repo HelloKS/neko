@@ -248,6 +248,13 @@
       }
     }
 
+    @Watch('chatOnly', { immediate: true })
+    onChatOnly(enabled: boolean) {
+      if (enabled) {
+        this.$accessor.video.reset()
+      }
+    }
+
     controlAttempt() {
       if (this.shakeKbd || this.$accessor.remote.hosted) return
 
