@@ -15,6 +15,11 @@ export const custom = [
     keywords: ['goo', 'goosad', 'him', 'sad'],
   },
   {
+    name: 'goofun',
+    file: 'himfun.png',
+    keywords: ['goo', 'goofun', 'him', 'fun', 'smile'],
+  },
+  {
     name: 'pepeyas',
     file: 'pepe_yas.png',
     keywords: ['yas', 'pepeyas', 'sex', 'pepe'],

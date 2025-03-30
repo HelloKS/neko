@@ -217,6 +217,6 @@ const data = {
   keywords,
 }
 
-fs.writeFile('public/emoji.json', JSON.stringify(data), () => {
+fs.writeFile('src/assets/emoji.json', JSON.stringify(data), () => {
   console.log('emoji.json done')
 })
