@@ -1,6 +1,5 @@
 <template>
   <ul>
-    <li><i @click.stop.prevent="about" class="fas fa-question-circle" /></li>
     <li>
       <i
         class="fas fa-shield-alt"
@@ -12,13 +11,6 @@
         }"
         v-if="admin"
       />
-    </li>
-    <li>
-      <select v-model="$i18n.locale">
-        <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">
-          {{ lang }}
-        </option>
-      </select>
     </li>
   </ul>
 </template>
@@ -60,9 +52,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue, Watch } from 'vue-property-decorator'
-  import { messages } from '~/locale'
-  import { set } from '~/utils/localstorage'
+  import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-menu' })
   export default class extends Vue {
@@ -70,32 +60,9 @@
       return this.$accessor.user.admin
     }
 
-    get langs() {
-      return Object.keys(messages)
-    }
-
     about() {
       this.$accessor.client.toggleAbout()
     }
 
-    @Watch('$i18n.locale')
-    onLanguageChange(newLang: string) {
-      set('lang', newLang)
-    }
-
-    mounted() {
-      const default_lang = new URL(location.href).searchParams.get('lang')
-      if (default_lang && this.langs.includes(default_lang)) {
-        this.$i18n.locale = default_lang
-      }
-      const show_side = new URL(location.href).searchParams.get('show_side')
-      if (show_side !== null) {
-        this.$accessor.client.setSide(show_side === '1')
-      }
-      const mute_chat = new URL(location.href).searchParams.get('mute_chat')
-      if (mute_chat !== null) {
-        this.$accessor.settings.setSound(mute_chat !== '1')
-      }
-    }
   }
 </script>

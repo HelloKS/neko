@@ -39,13 +39,19 @@
       </template>
     </ul>
     <neko-context ref="context" />
+    <div class="chat-scroll-to-bottom">
+      <i class="fas fa-angle-double-down" @click="() => { _history.scrollTop = _history.scrollHeight }" />
+    </div>
     <div v-if="!muted" class="chat-send">
       <div class="accent" />
       <div class="text-container">
         <textarea ref="input" :placeholder="$t('send_a_message')" @keydown="onKeyDown" v-model="content" />
         <neko-emoji v-if="emoji" @picked="onEmojiPicked" @done="emoji = false" />
-        <i class="emoji-menu fas fa-laugh" @click.stop.prevent="onEmoji"></i>
+        <li>
+          <i class="emoji-menu fas fa-laugh" @click.stop.prevent="onEmoji"></i>
+        </li>
       </div>
+      <input ref="hinput" type="text"/>
     </div>
   </div>
 </template>
@@ -267,6 +273,22 @@
       }
     }
 
+    //make .chat-scroll-to-bottom as floating button right above .chat-send
+    .chat-scroll-to-bottom {
+      position: absolute;
+      bottom: 100px;
+      right: 20px;
+      z-index: 1;
+      cursor: pointer;
+      color: $text-muted;
+      font-size: 20px;
+      transition: color 0.2s ease-in-out;
+
+      &:hover {
+        color: $text-normal;
+      }
+    }
+
     .chat-send {
       flex-shrink: 0;
       height: 80px;
@@ -282,6 +304,13 @@
         margin: 5px 0 10px 0;
       }
 
+      input {
+          height: 0;
+          opacity: 0;
+          font-size: 16px;
+          pointer-events: none;
+        }
+
       .text-container {
         flex: 1;
         width: 100%;
@@ -290,8 +319,20 @@
         border-radius: 5px;
         position: relative;
         display: flex;
+        
+        li {
+          display: inline-block;
+        }
 
         .emoji-menu {
+          width: 20px;
+          height: 20px;
+          font-size: 20px;
+          margin: 8px 5px 0 0;
+          cursor: pointer;
+        }
+
+        .clear-button {
           width: 20px;
           height: 20px;
           font-size: 20px;
@@ -336,6 +377,7 @@
             background: $text-link;
           }
         }
+
       }
     }
   }
@@ -365,6 +407,7 @@
   })
   export default class extends Vue {
     @Ref('input') readonly _input!: HTMLTextAreaElement
+    @Ref('hinput') readonly _hinput!: HTMLInputElement
     @Ref('history') readonly _history!: HTMLElement
     @Ref('context') readonly _context!: any
 
@@ -386,7 +429,13 @@
     @Watch('history')
     onHistroyChange() {
       this.$nextTick(() => {
-        this._history.scrollTop = this._history.scrollHeight
+        if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 100) {
+          this._history.scrollTop = this._history.scrollHeight
+        }
+
+        if (this.history.length > 200) {
+          this.history.splice(0, this.history.length - 200)
+        }
       })
     }
 
@@ -463,39 +512,43 @@
     }
 
     onKeyDown(event: KeyboardEvent) {
+      // Do nothing if user is muted by admin
       if (this.muted) {
         return
       }
 
-      if (this.content.length > length) {
-        this.content = this.content.substring(0, length)
+      // Workaround: ignore IME composing event
+      if (event.isComposing || event.key === 'Process') {
+        return
       }
 
-      if (this.content.length == length) {
-        if (
-          [8, 16, 17, 18, 20, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 91, 93, 144].includes(event.keyCode) ||
-          (event.ctrlKey && [67, 65, 88].includes(event.keyCode))
-        ) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        // Prevent enter keypress event
+        event.preventDefault()
+
+        // Workaround: iOS IME CJK compositing buffer bug
+        this._hinput.focus()
+        this._input.focus()
+
+        // Check if text is empty
+        if (this.content.length === 0) {
           return
         }
 
-        event.preventDefault()
+        // Cut message if it's over limit and notify to user
+        if (this.content.length > length) {
+          this.content = this.content.substring(0, length)
+          return
+        }
+
+        this.$accessor.chat.sendMessage(this.content)
+        this.content = ''
+        this.$nextTick(() => {
+          this._history.scrollTop = this._history.scrollHeight
+        })
+
         return
       }
-
-      if (event.keyCode !== 13 || event.shiftKey) {
-        return
-      }
-
-      if (this.content === '') {
-        event.preventDefault()
-        return
-      }
-
-      this.$accessor.chat.sendMessage(this.content)
-
-      this.content = ''
-      event.preventDefault()
     }
   }
 </script>

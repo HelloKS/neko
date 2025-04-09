@@ -1,6 +1,7 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
 import { accessor } from '~/store'
+import emojiJson from '~/assets/emoji.json'
 
 export const namespaced = true
 
@@ -12,12 +13,6 @@ interface Group {
 
 interface Keywords {
   [name: string]: string[]
-}
-
-interface Emojis {
-  groups: Group[]
-  keywords: Keywords
-  list: string[]
 }
 
 export const state = () => ({
@@ -59,16 +54,11 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     async initialise() {
-      try {
-        const req = await $http.get<Emojis>('emoji.json')
-        for (const group of req.data.groups) {
-          accessor.emoji.addGroup(group)
-        }
-        accessor.emoji.setList(req.data.list)
-        accessor.emoji.setKeywords(req.data.keywords)
-      } catch (err: any) {
-        console.error(err)
+      for (const group of emojiJson.groups) {
+        accessor.emoji.addGroup(group)
       }
+      accessor.emoji.setList(emojiJson.list)
+      accessor.emoji.setKeywords(emojiJson.keywords)
     },
   },
 )

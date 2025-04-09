@@ -11,7 +11,6 @@
         <textarea
           ref="overlay"
           class="overlay"
-          spellcheck="false"
           tabindex="0"
           data-gramm="false"
           :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
@@ -40,17 +39,10 @@
         <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
         <li v-if="!controlLocked && !implicitHosting" :class="extraControls || 'extra-control'">
           <i
-            :class="[
-              hosted && !hosting ? 'disabled' : '',
-              !hosted && !hosting ? 'faded' : '',
-              'fas',
-              'fa-computer-mouse',
-            ]"
+            :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
           />
         </li>
-      </ul>
-      <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
           <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
         </li>
@@ -61,13 +53,6 @@
             v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
             class="fas fa-external-link-alt"
           />
-        </li>
-        <li
-          v-if="hosting && is_touch_device"
-          :class="extraControls || 'extra-control'"
-          @click.stop.prevent="toggleMobileKeyboard"
-        >
-          <i class="fas fa-keyboard" />
         </li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
@@ -90,7 +75,7 @@
 
       .video-menu {
         position: absolute;
-        right: 20px;
+        left: 20px;
 
         &.top {
           top: 15px;
@@ -129,7 +114,7 @@
           }
           @media (max-width: 768px) {
             &.extra-control {
-              display: block;
+              display: inline-block;
             }
           }
 
@@ -142,7 +127,7 @@
       .player-container {
         position: relative;
         width: 100%;
-        max-width: calc(16 / 9 * 100vh);
+        max-width: calc(16 / 9 * 100dvh);
 
         video {
           position: absolute;
@@ -363,17 +348,6 @@
 
     get horizontal() {
       return this.$accessor.video.horizontal
-    }
-
-    get is_touch_device() {
-      return (
-        // check if the device has a touch screen
-        ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
-        // we also check if the device has a pointer
-        !window.matchMedia('(pointer:fine)').matches &&
-        // and is capable of hover, then it probably has a mouse
-        !window.matchMedia('(hover:hover)').matches
-      )
     }
 
     @Watch('width')
@@ -635,10 +609,10 @@
 
     requestFullscreen() {
       // try to fullscreen player element
-      if (elementRequestFullscreen(this._player)) {
-        this.onResize()
-        return
-      }
+      //if (elementRequestFullscreen(this._player)) {
+      //  this.onResize()
+      //  return
+      //}
 
       // fallback to fullscreen video itself (on mobile devices)
       if (elementRequestFullscreen(this._video)) {
@@ -813,8 +787,13 @@
     onResize() {
       const { offsetWidth, offsetHeight } = !this.fullscreen ? this._component : document.body
       this._player.style.width = `${offsetWidth}px`
-      this._player.style.height = `${offsetHeight}px`
-      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
+      if (document.body.offsetWidth >= 767) {
+        this._player.style.height = `${offsetHeight}px`
+        this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
+      } else {
+        this._player.style.height = `${9 * offsetWidth / 16}px`
+        this._container.style.removeProperty('max-width')
+      }
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
     }
 
@@ -825,60 +804,6 @@
       // in order to capture key events, overlay must be focused
       if (this.focused && this.hosting && !this.locked) {
         this._overlay.focus()
-      }
-    }
-
-    //
-    // mobile keyboard
-    //
-
-    kbdShow = false
-    kbdOpen = false
-
-    showMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      this.kbdShow = true
-      this.kbdOpen = false
-
-      const overlay = this.$refs.overlay as HTMLTextAreaElement
-      overlay.focus()
-      window.visualViewport?.addEventListener('resize', this.onVisualViewportResize)
-    }
-
-    hideMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      this.kbdShow = false
-      this.kbdOpen = false
-
-      const overlay = this.$refs.overlay as HTMLTextAreaElement
-      window.visualViewport?.removeEventListener('resize', this.onVisualViewportResize)
-      overlay.blur()
-    }
-
-    toggleMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      if (this.kbdShow) {
-        this.hideMobileKeyboard()
-      } else {
-        this.showMobileKeyboard()
-      }
-    }
-
-    // visual viewport resize event is fired when keyboard is opened or closed
-    // android does not blur textarea when keyboard is closed, so we need to do it manually
-    onVisualViewportResize() {
-      if (!this.kbdShow) return
-
-      if (!this.kbdOpen) {
-        this.kbdOpen = true
-      } else {
-        this.hideMobileKeyboard()
       }
     }
   }

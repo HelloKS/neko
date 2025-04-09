@@ -9,6 +9,7 @@ export const side = {
   chat: 'Chat',
   files: 'Files',
   settings: 'Settings',
+  members: 'Members',
 }
 
 export const connect = {
@@ -89,6 +90,7 @@ export const setting = {
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Keyboard Layout',
   broadcast_title: 'Live Broadcast',
+  ui_language: 'Interface Language',
 }
 
 export const connection = {

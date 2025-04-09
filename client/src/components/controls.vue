@@ -145,7 +145,7 @@
         input[type='range'] {
           width: 100%;
           background: transparent;
-          width: 150px;
+          width: 100px;
           height: 20px;
           -webkit-appearance: none;
 

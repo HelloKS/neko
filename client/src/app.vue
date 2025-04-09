@@ -1,10 +1,10 @@
 <template>
-  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '']">
+  <div id="neko" :class="[chatOnly ? 'chat-only' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
     <template v-else>
-      <main class="neko-main">
+      <main v-if="!chatOnly" class="neko-main">
         <div v-if="!videoOnly" class="header-container">
           <neko-header />
         </div>
@@ -16,13 +16,12 @@
             @control-attempt="controlAttempt"
           />
         </div>
-        <div v-if="!videoOnly" class="room-container">
-          <neko-members />
+        <div v-if="!videoOnly && !hideControls" class="room-container">
           <div class="room-menu">
             <div class="settings">
               <neko-menu />
             </div>
-            <div class="controls">
+            <div v-if="!chatOnly" class="controls">
               <neko-controls :shakeKbd="shakeKbd" />
             </div>
             <div class="emotes">
@@ -31,11 +30,11 @@
           </div>
         </div>
       </main>
-      <neko-side v-if="!videoOnly && side" />
+      <neko-side v-if="chatOnly || (!videoOnly && side)" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
       <notifications
-        v-if="!videoOnly"
+        v-if="!videoOnly || !chatOnly"
         group="neko"
         position="top left"
         style="top: 50px; pointer-events: none"
@@ -47,13 +46,9 @@
 
 <style lang="scss">
   #neko {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    max-width: 100vw;
-    max-height: 100vh;
+    position: relative;
+    width: 100dvw;
+    height: 100dvh;
     flex-direction: row;
     display: flex;
 
@@ -86,6 +81,7 @@
         flex-shrink: 0;
         flex-direction: column;
         display: flex;
+        overflow-x: auto;
 
         .room-menu {
           max-width: 100%;
@@ -114,57 +110,68 @@
             align-items: center;
             display: flex;
           }
+
+          ul {
+            white-space: nowrap;
+          }
         }
       }
     }
   }
 
-  @media only screen and (max-width: 1024px) {
-    html,
-    body {
-      overflow-y: auto !important;
-      width: auto !important;
-      height: auto !important;
-    }
+  #neko.chat-only {
+    flex-direction: column;
 
-    body > p {
-      display: none;
+    .neko-menu {
+      order: 1;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
     }
+  }
 
+  @media only screen and (max-width: 767.98px) {
     #neko {
-      position: relative;
+      display: flex;
       flex-direction: column;
-      max-height: initial !important;
+      justify-content: flex-start;
 
       .neko-main {
-        height: 100vh;
+        order: 1;
+        //height: calc(9 * 100vw / 16 + #{$menu-height} + #{$controls-height});
+        min-height: calc(9 * 100dvw / 16 + #{$menu-height} + #{$controls-height});
+        flex-grow: 0;
       }
 
       .neko-menu {
-        height: 100vh;
-        width: 100% !important;
+        order: 2;
+        flex-grow: 1;
+        width: 100%;
+        max-height: calc(100dvh - (9 * 100dvw / 16 + #{$menu-height} + #{$controls-height}));
+
+        .room-menu {
+        flex-wrap: wrap;
+        overflow-y: auto;
+        justify-content: center;
+
+          .settings {
+            order: 1;
+          }
+
+          .emotes {
+            order: 2;
+          }
+
+          .controls {
+            order: 3;
+          }
       }
+
+      }
+
     }
   }
 
-  @media only screen and (max-width: 1024px) and (orientation: portrait) {
-    #neko {
-      &.expanded .neko-main {
-        height: 40vh;
-      }
-
-      &.expanded .neko-menu {
-        height: 60vh;
-        width: 100% !important;
-      }
-    }
-  }
-
-  @media only screen and (max-width: 768px) {
-    #neko .neko-main .room-container {
-      display: none;
-    }
-  }
 </style>
 
 <script lang="ts">
@@ -175,7 +182,6 @@
   import Menu from '~/components/menu.vue'
   import Side from '~/components/side.vue'
   import Controls from '~/components/controls.vue'
-  import Members from '~/components/members.vue'
   import Emotes from '~/components/emotes.vue'
   import About from '~/components/about.vue'
   import Header from '~/components/header.vue'
@@ -189,7 +195,6 @@
       'neko-menu': Menu,
       'neko-side': Side,
       'neko-controls': Controls,
-      'neko-members': Members,
       'neko-emotes': Emotes,
       'neko-about': About,
       'neko-header': Header,
@@ -210,6 +215,10 @@
       return !!new URL(location.href).searchParams.get('cast')
     }
 
+    get isChatMode() {
+      return !!new URL(location.href).searchParams.get('chat')
+    }
+    
     get isEmbedMode() {
       return !!new URL(location.href).searchParams.get('embed')
     }
@@ -218,15 +227,17 @@
       return this.isCastMode
     }
 
+    get chatOnly() {
+      return this.isChatMode
+    }
+
     get videoOnly() {
       return this.isCastMode || this.isEmbedMode
     }
 
     @Watch('volume', { immediate: true })
     onVolume(volume: number) {
-      if (new URL(location.href).searchParams.has('volume')) {
-        this.$accessor.video.setVolume(volume)
-      }
+      this.$accessor.video.setVolume(volume)
     }
 
     @Watch('hideControls', { immediate: true })
@@ -237,17 +248,10 @@
       }
     }
 
-    @Watch('side')
-    onSide(side: boolean) {
-      if (side) {
-        console.log('side enabled')
-        // scroll to the side
-        this.$nextTick(() => {
-          const side = document.querySelector('aside')
-          if (side) {
-            side.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
-        })
+    @Watch('chatOnly', { immediate: true })
+    onChatOnly(enabled: boolean) {
+      if (enabled) {
+        this.$accessor.video.reset()
       }
     }
 

@@ -57,11 +57,11 @@
 </template>
 
 <style lang="scss" scoped>
-  $emoji-width: 300px;
+  $emoji-width: 20rem;
 
   .neko-emoji {
-    position: absolute;
-    z-index: 10000;
+    position: fixed;
+    z-index: 10;
     width: $emoji-width;
     height: 350px;
     background: $background-secondary;
@@ -188,14 +188,14 @@
       align-content: center;
       justify-content: center;
       flex-direction: column;
-      height: 36px;
+      height: 46px;
       background: $background-tertiary;
 
       .details-container {
         display: flex;
         align-content: center;
         flex-direction: row;
-        height: 20px;
+        height: 30px;
 
         span {
           cursor: default;
