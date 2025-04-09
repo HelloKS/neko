@@ -1,7 +1,9 @@
-ARG BASE_IMAGE=golang:1.21-bullseye
+ARG BASE_IMAGE=golang:1.21-bookworm
 FROM $BASE_IMAGE AS server
 
 WORKDIR /src
+
+COPY ./gst-bin.tar.gz /src/gst-bin.tar.gz
 
 #
 # install dependencies
@@ -9,23 +11,29 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
-        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
-    #
-    # install libxcvt-dev (not available in debian:bullseye)
-    ARCH=$(dpkg --print-architecture); \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_${ARCH}.deb; \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_${ARCH}.deb; \
-    apt-get install --no-install-recommends ./libxcvt0_0.1.2-1_${ARCH}.deb ./libxcvt-dev_0.1.2-1_${ARCH}.deb; \
-    rm ./libxcvt0_0.1.2-1_${ARCH}.deb ./libxcvt-dev_0.1.2-1_${ARCH}.deb; \
+        libx11-dev libxrandr-dev libxtst-dev libsndfile1 libglib2.0-dev libunwind8-dev libdw-dev libxfixes-dev libgtk-3-dev libxcvt-dev; \
     #
     # clean up
     apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*; \
+    #
+    # extract custom gstreamer
+    tar xzf /src/gst-bin.tar.gz --directory=/opt/; \
+    rm -rf /src/gst-bin.tar.gz
 
 ARG GIT_COMMIT
 ARG GIT_BRANCH
 ARG GIT_TAG
+
+ENV PATH="${PATH}:/opt/gst-bin/bin"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu"
+ENV LIBRARY_PATH="${LIBRARY_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu"
+ENV PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu/pkgconfig"
+ENV CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}:/opt/gst-bin/include/gstreamer-1.0"
+ENV C_INCLUDE_PATH="${C_INCLUDE_PATH}:/opt/gst-bin/include/gstreamer-1.0"
+ENV GST_PLUGIN_PATH=/opt/gst-bin/lib/x86_64-linux-gnu/gstreamer-1.0
+ENV GST_PLUGIN_SCANNER=/opt/gst-bin/libexec/gstreamer-1.0/gst-plugin-scanner
+ENV GI_TYPELIB_PATH=/opt/gst-bin/lib/x86_64-linux-gnu/girepository-1.0/
 
 #
 # build server

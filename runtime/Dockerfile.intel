@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=debian:bullseye-slim
+ARG BASE_IMAGE=debian:bookworm
 FROM $BASE_IMAGE AS runtime
 
 #
@@ -13,17 +13,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     #
     # add non-free repo for intel drivers
-    echo deb http://deb.debian.org/debian bullseye main contrib non-free > /etc/apt/sources.list; \
-    echo deb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free >> /etc/apt/sources.list; \
-    echo deb http://deb.debian.org/debian bullseye-updates main contrib non-free >> /etc/apt/sources.list; \
+    sed -i 's/^Components: main$/& contrib non-free/' /etc/apt/sources.list.d/debian.sources; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
-        pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
+        pulseaudio dbus-x11 dbus-system-bus-common xserver-xorg-video-dummy \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libxcvt0 \
         #
         # intel driver + vaapi
-        intel-media-va-driver-non-free libva2 vainfo \
+        intel-media-va-driver-non-free libva2 vainfo libvpl2 \
         #
         # needed for profile upload preStop hook
         zip curl \
@@ -32,15 +30,8 @@ RUN set -eux; \
         xdotool xclip libgtk-3-0 \
         #
         # gst
-        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-        gstreamer1.0-pulseaudio gstreamer1.0-vaapi; \
-    #
-    # install libxcvt0 (not available in debian:bullseye)
-    ARCH=$(dpkg --print-architecture); \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_${ARCH}.deb; \
-    apt-get install --no-install-recommends ./libxcvt0_0.1.2-1_${ARCH}.deb; \
-    rm ./libxcvt0_0.1.2-1_${ARCH}.deb; \
+        libsndfile1 libglib2.0-0 libunwind8 \
+        libglib2.0-0 libdw1 libxfixes3 libopenh264-7; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -111,6 +102,17 @@ ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 ENV NEKO_HWENC=VAAPI
 ENV RENDER_GID=
+
+# set custom gstreamer envs
+ENV PATH="${PATH}:/opt/gst-bin/bin"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu"
+ENV LIBRARY_PATH="${LIBRARY_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu"
+ENV PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/opt/gst-bin/lib/x86_64-linux-gnu/pkgconfig"
+ENV CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}:/opt/gst-bin/include/gstreamer-1.0"
+ENV C_INCLUDE_PATH="${C_INCLUDE_PATH}:/opt/gst-bin/include/gstreamer-1.0"
+ENV GST_PLUGIN_PATH=/opt/gst-bin/lib/x86_64-linux-gnu/gstreamer-1.0
+ENV GST_PLUGIN_SCANNER=/opt/gst-bin/libexec/gstreamer-1.0/gst-plugin-scanner
+ENV GI_TYPELIB_PATH=/opt/gst-bin/lib/x86_64-linux-gnu/girepository-1.0/
 
 #
 # add healthcheck
