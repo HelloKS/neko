@@ -14,3 +14,7 @@ load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket auth-anony
 
 ### Make sure we always have a sink around, even if it is a null sink.
 load-module module-always-sink
+
+### Use swh-plugins for volume normalize
+load-module module-ladspa-sink sink_name=virtual_compressor plugin=sc4_1882 label=sc4 sink_master=audio_output control=1,1.5,400,-30,20,5,24
+set-default-sink virtual_compressor

@@ -29,6 +29,8 @@ RUN set -eux; \
         # file chooser handler, clipboard, drop
         xdotool xclip libgtk-3-0 \
         #
+        # volume normalization
+        swh-plugins \
         # gst
         libsndfile1 libglib2.0-0 libunwind8 \
         libglib2.0-0 libdw1 libxfixes3 libopenh264-7; \
