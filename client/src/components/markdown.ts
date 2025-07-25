@@ -29,6 +29,7 @@ interface MarkdownRules extends Rules<HtmlOutputRule> {
   everyone: Rule
   here: Rule
   link?: Rule
+  image: Rule
 }
 
 interface HTMLAttributes {
@@ -243,6 +244,23 @@ const rules: MarkdownRules = {
     },
     html(node, output, state) {
       return htmlTag('span', htmlTag('span', output(node.content, state), {}, state), { class: 'spoiler' }, state)
+    },
+  },
+  image: {
+    order: 0,
+    match: (source) => /^img\[\[([\s\S]+?)\]\]/.exec(source),
+    parse(capture, parse, state) {
+      return {
+        content: capture[1],
+      }
+    },
+    html(node, output, state) {
+      return htmlTag(
+        'img',
+        '',
+        { src: node.content as string},
+        state,
+      )
     },
   },
 }

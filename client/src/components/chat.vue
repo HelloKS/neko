@@ -49,6 +49,11 @@
         <neko-emoji v-if="emoji" @picked="onEmojiPicked" @done="emoji = false" />
         <li>
           <i class="emoji-menu fas fa-laugh" @click.stop.prevent="onEmoji"></i>
+          <label for="imgInput">
+            <i class="emoji-menu fas fa-image"></i>
+          </label>
+          <input id="imgInput" type="file" accept="image/*" @change="onImage">
+          <canvas id="imageCanvas"></canvas>
         </li>
       </div>
       <input ref="hinput" type="text"/>
@@ -332,6 +337,14 @@
           cursor: pointer;
         }
 
+        input {
+          display: none;
+        }
+
+        canvas {
+          display: none;
+        }
+
         .clear-button {
           width: 20px;
           height: 20px;
@@ -459,6 +472,44 @@
     timestamp(time: Date) {
       const str = formatRelative(time, new Date())
       return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
+    }
+    
+    onImage(e: any) {
+      let selectedFile = e.target.files[0];
+      const imageCanvas = document.getElementById('imageCanvas') as HTMLCanvasElement;
+      const ctx = imageCanvas.getContext('2d');
+
+      if (!selectedFile) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+          const img = new Image();
+          img.onload = () => {
+              const maxWidth = 100; // 최대 가로 픽셀
+              let newWidth = img.width;
+              let newHeight = img.height;
+
+              if (img.width > maxWidth) {
+                  newWidth = maxWidth;
+                  newHeight = (img.height * maxWidth) / img.width; // 비율 유지
+              }
+
+              imageCanvas.width = newWidth;
+              imageCanvas.height = newHeight;
+
+              ctx?.clearRect(0, 0, newWidth, newHeight);
+              ctx?.drawImage(img, 0, 0, newWidth, newHeight);
+
+              const base64Image = imageCanvas.toDataURL('image/jpeg', 0.8);
+
+              this.$accessor.chat.sendMessage('img[[' + base64Image + ']]')
+          };
+
+          img.src = e.target!.result as string;
+        };
+        reader.readAsDataURL(selectedFile);
     }
 
     onEmoji() {
