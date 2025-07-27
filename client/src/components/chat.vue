@@ -505,6 +505,9 @@
               const base64Image = imageCanvas.toDataURL('image/jpeg', 0.8);
 
               this.$accessor.chat.sendMessage('img[[' + base64Image + ']]')
+              this.$nextTick(() => {
+                this._history.scrollTop = this._history.scrollHeight
+              })
           };
 
           img.src = e.target!.result as string;
