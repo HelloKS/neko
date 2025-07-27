@@ -442,12 +442,14 @@
     @Watch('history')
     onHistroyChange() {
       this.$nextTick(() => {
-        if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 100) {
-          this._history.scrollTop = this._history.scrollHeight
-        }
+        if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120) {
+          setTimeout(() => {
+              this._history.scrollTop = this._history.scrollHeight
 
-        if (this.history.length > 200) {
-          this.history.splice(0, this.history.length - 200)
+            if (this.history.length > 200) {
+              this.history.splice(0, this.history.length - 200)
+            }
+          }, 100);
         }
       })
     }
@@ -487,13 +489,13 @@
       reader.onload = (e: ProgressEvent<FileReader>) => {
           const img = new Image();
           img.onload = () => {
-              const maxWidth = 100; // 최대 가로 픽셀
+              const maxHeight = 100; // 최대 가로 픽셀
               let newWidth = img.width;
               let newHeight = img.height;
 
-              if (img.width > maxWidth) {
-                  newWidth = maxWidth;
-                  newHeight = (img.height * maxWidth) / img.width; // 비율 유지
+              if (img.width > maxHeight) {
+                  newWidth = (img.width * maxHeight) / img.height; // 비율 유지
+                  newHeight = maxHeight;
               }
 
               imageCanvas.width = newWidth;
@@ -505,9 +507,6 @@
               const base64Image = imageCanvas.toDataURL('image/jpeg', 0.8);
 
               this.$accessor.chat.sendMessage('img[[' + base64Image + ']]')
-              this.$nextTick(() => {
-                this._history.scrollTop = this._history.scrollHeight
-              })
           };
 
           img.src = e.target!.result as string;
