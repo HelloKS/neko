@@ -287,6 +287,8 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
+	chatOnly, err := ws.IsChatOnly(r)
+
 	socket := &WebSocket{
 		id:         id,
 		ws:         ws,
@@ -310,7 +312,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
-	ws.sessions.New(id, admin, socket)
+	ws.sessions.New(id, admin, chatOnly, socket)
 
 	ws.logger.
 		Debug().
@@ -381,6 +383,15 @@ func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
 	}
 
 	return ws.IsAdmin(passwords[0])
+}
+
+func (ws *WebSocketHandler) IsChatOnly(r *http.Request) (bool, error) {
+	isChatOnly, ok := r.URL.Query()["chat_only"]
+	if !ok {
+		return false, nil
+	}
+
+	return isChatOnly[0] == "true", nil
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {

@@ -27,6 +27,7 @@ type Session interface {
 	ID() string
 	Name() string
 	Admin() bool
+	ChatOnly() bool
 	Muted() bool
 	Connected() bool
 	Member() *Member
@@ -47,7 +48,7 @@ type Session interface {
 }
 
 type SessionManager interface {
-	New(id string, admin bool, socket WebSocket) Session
+	New(id string, admin bool, chatOnly bool, socket WebSocket) Session
 	HasHost() bool
 	IsHost(id string) bool
 	SetHost(id string) error

@@ -13,6 +13,7 @@ type Session struct {
 	id        string
 	name      string
 	admin     bool
+	chatonly  bool
 	muted     bool
 	connected bool
 	manager   *SessionManager
@@ -30,6 +31,10 @@ func (session *Session) Name() string {
 
 func (session *Session) Admin() bool {
 	return session.admin
+}
+
+func (session *Session) ChatOnly() bool {
+	return session.chatonly
 }
 
 func (session *Session) Muted() bool {

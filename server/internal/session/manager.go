@@ -32,10 +32,11 @@ type SessionManager struct {
 	controlLocked bool
 }
 
-func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
+func (manager *SessionManager) New(id string, admin bool, chatOnly bool, socket types.WebSocket) types.Session {
 	session := &Session{
 		id:        id,
 		admin:     admin,
+		chatonly:  chatOnly,
 		manager:   manager,
 		socket:    socket,
 		logger:    manager.logger.With().Str("id", id).Logger(),

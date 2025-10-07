@@ -7,9 +7,11 @@ import (
 )
 
 func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, session types.Session) error {
-	// send sdp and id over to client
-	if err := h.signalProvide(id, session); err != nil {
-		return err
+	if !session.ChatOnly() {
+		// send sdp and id over to client
+		if err := h.signalProvide(id, session); err != nil {
+			return err
+		}
 	}
 
 	// send initialization information
@@ -40,6 +42,13 @@ func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, sessio
 	if h.state.FileTransferEnabled() && (session.Admin() || !h.state.IsLocked("file_transfer")) {
 		if err := h.FileTransferRefresh(session); err != nil {
 			return err
+		}
+	}
+
+	if session.ChatOnly() {
+		if err := session.SetConnected(true); err != nil {
+			h.logger.Warn().Err(err).Msg("unable to set connected on peer")
+			h.sessions.Destroy(id)
 		}
 	}
 
