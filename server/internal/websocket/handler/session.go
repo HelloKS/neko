@@ -47,7 +47,7 @@ func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, sessio
 
 	if session.ChatOnly() {
 		if err := session.SetConnected(true); err != nil {
-			h.logger.Warn().Err(err).Msg("unable to set connected on peer")
+			h.logger.Warn().Err(err).Msg("unable to set connected on chat only client")
 			h.sessions.Destroy(id)
 		}
 	}
