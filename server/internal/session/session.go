@@ -161,6 +161,9 @@ func (session *Session) SignalRemoteAnswer(sdp string) error {
 	if session.peer == nil {
 		return nil
 	}
+	if sdp == "" {
+		return nil
+	}
 	session.logger.Info().Msg("signal update - RemoteAnswer")
 	return session.peer.SetAnswer(sdp)
 }
