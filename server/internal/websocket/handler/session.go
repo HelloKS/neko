@@ -46,6 +46,11 @@ func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, sessio
 	}
 
 	if session.ChatOnly() {
+		if err := session.SetName("챗봇 API"); err != nil {
+			h.logger.Warn().Err(err).Msg("unable to set name on chat only client")
+			h.sessions.Destroy(id)
+		}
+
 		if err := session.SetConnected(true); err != nil {
 			h.logger.Warn().Err(err).Msg("unable to set connected on chat only client")
 			h.sessions.Destroy(id)
