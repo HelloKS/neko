@@ -16,7 +16,7 @@ if [ ! -d "${PWD}/../client/node_modules" ] || [ "$1" == "-i" ]; then
     -v "${PWD}/../client:/app" \
     --workdir="/app" \
     --entrypoint="npm" \
-    node:18-bullseye-slim install
+    node:20-bookworm-slim install
 fi
 
 docker run --rm -it \
@@ -25,5 +25,5 @@ docker run --rm -it \
   -e "VITE_SERVER_PORT=${SERVER_PORT}" \
   --workdir="/app" \
   --entrypoint="npm" \
-  node:18-bullseye-slim run serve
+  node:20-bookworm-slim run serve
   

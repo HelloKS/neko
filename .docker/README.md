@@ -28,7 +28,7 @@ If you are changing something in the server code, you do not want to rebuild con
 
 ## Step 3: Serving client
 
-- `./serve-client` - Serving vue.js client.
+- `./serve-client` - Serving client (Vite dev server).
 - `./serve-client -i` - Install all dependencies.
 
 ## Debug

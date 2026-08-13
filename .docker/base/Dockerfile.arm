@@ -35,7 +35,7 @@ RUN ./build
 #
 # Because client builds fail in Github Actions, therefor we build it outside of Docker.
 #
-# FROM node:18-bookworm-slim as client
+# FROM node:20-bookworm-slim as client
 # 
 # # install dependencies
 # RUN set -eux; apt-get update; \
@@ -46,7 +46,7 @@ RUN ./build
 # #
 # # install dependencies
 # COPY client/package*.json ./
-# RUN npm install
+# RUN npm ci
 # 
 # #
 # # build client

@@ -32,17 +32,18 @@ RUN ./build
 #
 # STAGE 2: CLIENT
 #
-FROM node:18-bookworm-slim as client
+FROM node:20-bookworm-slim as client
 WORKDIR /src
 
 #
 # install dependencies
 COPY client/package*.json ./
-RUN npm install
+RUN npm ci
 
 #
 # build client
 COPY client/ .
+# build client with Vite (vite build)
 RUN npm run build
 
 #
