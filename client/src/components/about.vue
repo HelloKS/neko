@@ -135,7 +135,7 @@
   import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-about' })
-  export default class extends Vue {
+  export default class About extends Vue {
     loading = false
 
     get about() {

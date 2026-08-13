@@ -150,7 +150,7 @@
   import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-connect' })
-  export default class extends Vue {
+  export default class Connect extends Vue {
     private autoPassword: string | null = new URL(location.href).searchParams.get('pwd')
 
     private displayname: string = ''

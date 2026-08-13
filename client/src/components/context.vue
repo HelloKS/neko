@@ -146,7 +146,7 @@
       'neko-avatar': Avatar,
     },
   })
-  export default class extends Vue {
+  export default class Context extends Vue {
     @Ref('context') readonly context!: any
 
     get admin() {

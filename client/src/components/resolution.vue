@@ -109,7 +109,7 @@
       'vue-context': VueContext,
     },
   })
-  export default class extends Vue {
+  export default class Resolution extends Vue {
     @Ref('context') readonly context!: VueContext
 
     get width() {

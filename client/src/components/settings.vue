@@ -317,7 +317,7 @@
   import { messages } from '~/locale'
 
   @Component({ name: 'neko-settings' })
-  export default class extends Vue {
+  export default class Settings extends Vue {
     private broadcast_url: string = ''
 
     get admin() {

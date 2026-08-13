@@ -201,7 +201,7 @@
       'neko-unsupported': Unsupported,
     },
   })
-  export default class extends Vue {
+  export default class App extends Vue {
     @Ref('video') video!: Video
 
     shakeKbd = false

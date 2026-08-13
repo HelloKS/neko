@@ -215,7 +215,7 @@
       'neko-clipboard': Clipboard,
     },
   })
-  export default class extends Vue {
+  export default class Video extends Vue {
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
     @Ref('overlay') readonly _overlay!: HTMLTextAreaElement

@@ -418,7 +418,7 @@
       'neko-avatar': Avatar,
     },
   })
-  export default class extends Vue {
+  export default class Chat extends Vue {
     @Ref('input') readonly _input!: HTMLTextAreaElement
     @Ref('hinput') readonly _hinput!: HTMLInputElement
     @Ref('history') readonly _history!: HTMLElement

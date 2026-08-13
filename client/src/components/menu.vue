@@ -55,7 +55,7 @@
   import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-menu' })
-  export default class extends Vue {
+  export default class Menu extends Vue {
     get admin() {
       return this.$accessor.user.admin
     }

@@ -255,7 +255,7 @@
   import { Vue, Component, Prop } from 'vue-property-decorator'
 
   @Component({ name: 'neko-controls' })
-  export default class extends Vue {
+  export default class Controls extends Vue {
     @Prop(Boolean) readonly shakeKbd!: boolean
 
     get controlLocked() {

@@ -146,7 +146,7 @@ fs.writeFile(
 .emoji {
   display: inline-block;
   background-size: ${SHEET_COLUMNS * 100}%;
-  background-image: url('~emoji-datasource/img/apple/sheets/32.png');
+  background-image: url('emoji-datasource/img/apple/sheets/32.png');
   background-repeat: no-repeat;
   vertical-align: bottom;
   height: 32px;

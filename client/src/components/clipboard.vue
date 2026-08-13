@@ -41,7 +41,7 @@
   @Component({
     name: 'neko-clipboard',
   })
-  export default class extends Vue {
+  export default class Clipboard extends Vue {
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
 
     private opened: boolean = false

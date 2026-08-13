@@ -22,7 +22,7 @@ fi
 docker run --rm -it \
   -p "${CLIENT_PORT}:8080" \
   -v "${PWD}/../client:/app" \
-  -e "VUE_APP_SERVER_PORT=${SERVER_PORT}" \
+  -e "VITE_SERVER_PORT=${SERVER_PORT}" \
   --workdir="/app" \
   --entrypoint="npm" \
   node:18-bullseye-slim run serve

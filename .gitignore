@@ -36,3 +36,5 @@ bin
 
 # Code Editors
 .idea
+# pi agent runtime state
+.pi/

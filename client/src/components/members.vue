@@ -168,7 +168,7 @@
       'neko-avatar': Avatar,
     },
   })
-  export default class extends Vue {
+  export default class Members extends Vue {
     @Ref('context') readonly _context!: any
 
     get id() {
