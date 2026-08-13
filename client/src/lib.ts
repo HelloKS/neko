@@ -51,8 +51,9 @@ function extend(component: any) {
   return defineComponent({
     ...component,
     computed: {
-      ...(component.computed || {}),
+      // mixin first, component wins (Vue 2 mixin semantics)
       ...exportMixin.computed,
+      ...(component.computed || {}),
     },
   })
 }
