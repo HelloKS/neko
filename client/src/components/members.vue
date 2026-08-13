@@ -7,10 +7,9 @@
             <neko-avatar class="avatar" :seed="member.displayname" :size="50" />
           </div>
         </li>
-        <template v-for="(member, index) in members">
+        <template v-for="(member, index) in members" :key="index">
           <li
             v-if="member.id !== id && member.connected"
-            :key="index"
             v-tooltip="{ content: member.displayname, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
           >
             <div
@@ -156,39 +155,38 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
   import Content from './context.vue'
   import Avatar from './avatar.vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-members',
     components: {
       'neko-context': Content,
       'neko-avatar': Avatar,
     },
+    computed: {
+      _context() {
+        return this.$refs.context as any
+      },
+      id() {
+        return this.$accessor.user.id
+      },
+      host() {
+        return this.$accessor.remote.id
+      },
+      member() {
+        return this.$accessor.user.member
+      },
+      members() {
+        return this.$accessor.user.members
+      },
+    },
+    methods: {
+      onContext(event: MouseEvent, data: any) {
+        this._context.open(event, data)
+      },
+    },
   })
-  export default class Members extends Vue {
-    @Ref('context') readonly _context!: any
-
-    get id() {
-      return this.$accessor.user.id
-    }
-
-    get host() {
-      return this.$accessor.remote.id
-    }
-
-    get member() {
-      return this.$accessor.user.member
-    }
-
-    get members() {
-      return this.$accessor.user.members
-    }
-
-    onContext(event: MouseEvent, data: any) {
-      this._context.open(event, data)
-    }
-  }
 </script>

@@ -1,4 +1,4 @@
-import { PluginObject } from 'vue'
+import type { App } from 'vue'
 
 interface Logger {
   error(error: Error): void
@@ -15,14 +15,14 @@ declare global {
   }
 }
 
-declare module 'vue/types/vue' {
-  interface Vue {
+declare module 'vue' {
+  interface ComponentCustomProperties {
     $log: Logger
   }
 }
 
-const plugin: PluginObject<undefined> = {
-  install(Vue) {
+const plugin = {
+  install(app: App) {
     window.$log = {
       error: (error: Error) => console.error('[%cNEKO%c] %cERR', 'color: #498ad8;', '', 'color: #d84949;', error),
       warn: (...log: any[]) => console.warn('[%cNEKO%c] %cWRN', 'color: #498ad8;', '', 'color: #eae364;', ...log),
@@ -30,7 +30,7 @@ const plugin: PluginObject<undefined> = {
       debug: (...log: any[]) => console.log('[%cNEKO%c] %cDBG', 'color: #498ad8;', '', 'color: #eae364;', ...log),
     }
 
-    Vue.prototype.$log = window.$log
+    app.config.globalProperties.$log = window.$log
   },
 }
 

@@ -1,6 +1,6 @@
 <template>
   <vue-context class="context" ref="context">
-    <template slot-scope="child" v-if="child.data">
+    <template v-slot="child" v-if="child.data">
       <li class="header">
         <div class="user">
           <neko-avatar class="avatar" :seed="child.data.member.displayname" :size="25" />
@@ -132,125 +132,114 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
   import { Member } from '~/neko/types'
 
-  // @ts-ignore
-  import { VueContext } from 'vue-context'
+  import VueContext from './vue-context.vue'
   import Avatar from './avatar.vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-context',
     components: {
       'vue-context': VueContext,
       'neko-avatar': Avatar,
     },
+    computed: {
+      context() {
+        return this.$refs.context as any
+      },
+      admin() {
+        return this.$accessor.user.admin
+      },
+      hosting() {
+        return this.$accessor.remote.hosting
+      },
+      host() {
+        return this.$accessor.remote.id
+      },
+      implicitHosting() {
+        return this.$accessor.remote.implicitHosting
+      },
+    },
+    methods: {
+      open(event: MouseEvent, data: any) {
+        this.context.open(event, data)
+      },
+      async kick(member: Member) {
+        const value = await this.$swal({
+          title: this.$t('context.confirm.kick_title', { name: member.displayname }) as string,
+          text: this.$t('context.confirm.kick_text', { name: member.displayname }) as string,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.$t('context.confirm.button_yes') as string,
+          cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+        })
+
+        if (value) {
+          this.$accessor.user.kick(member)
+        }
+      },
+      async ban(member: Member) {
+        const value = await this.$swal({
+          title: this.$t('context.confirm.ban_title', { name: member.displayname }) as string,
+          text: this.$t('context.confirm.ban_text', { name: member.displayname }) as string,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.$t('context.confirm.button_yes') as string,
+          cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+        })
+
+        if (value) {
+          this.$accessor.user.ban(member)
+        }
+      },
+      async mute(member: Member) {
+        const value = await this.$swal({
+          title: this.$t('context.confirm.mute_title', { name: member.displayname }) as string,
+          text: this.$t('context.confirm.mute_text', { name: member.displayname }) as string,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.$t('context.confirm.button_yes') as string,
+          cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+        })
+
+        if (value) {
+          this.$accessor.user.mute(member)
+        }
+      },
+      async unmute(member: Member) {
+        const value = await this.$swal({
+          title: this.$t('context.confirm.unmute_title', { name: member.displayname }) as string,
+          text: this.$t('context.confirm.unmute_text', { name: member.displayname }) as string,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: this.$t('context.confirm.button_yes') as string,
+          cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+        })
+
+        if (value) {
+          this.$accessor.user.unmute(member)
+        }
+      },
+      adminRelease() {
+        this.$accessor.remote.adminRelease()
+      },
+      adminControl() {
+        this.$accessor.remote.adminControl()
+      },
+      adminGive(member: Member) {
+        this.$accessor.remote.adminGive(member)
+      },
+      give(member: Member) {
+        this.$accessor.remote.give(member)
+      },
+      ignore(member: Member) {
+        this.$accessor.user.setIgnored({ id: member.id, ignored: true })
+      },
+      unignore(member: Member) {
+        this.$accessor.user.setIgnored({ id: member.id, ignored: false })
+      },
+    },
   })
-  export default class Context extends Vue {
-    @Ref('context') readonly context!: any
-
-    get admin() {
-      return this.$accessor.user.admin
-    }
-
-    get hosting() {
-      return this.$accessor.remote.hosting
-    }
-
-    get host() {
-      return this.$accessor.remote.id
-    }
-
-    get implicitHosting() {
-      return this.$accessor.remote.implicitHosting
-    }
-
-    open(event: MouseEvent, data: any) {
-      this.context.open(event, data)
-    }
-
-    async kick(member: Member) {
-      const value = await this.$swal({
-        title: this.$t('context.confirm.kick_title', { name: member.displayname }) as string,
-        text: this.$t('context.confirm.kick_text', { name: member.displayname }) as string,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes') as string,
-        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      })
-
-      if (value) {
-        this.$accessor.user.kick(member)
-      }
-    }
-
-    async ban(member: Member) {
-      const value = await this.$swal({
-        title: this.$t('context.confirm.ban_title', { name: member.displayname }) as string,
-        text: this.$t('context.confirm.ban_text', { name: member.displayname }) as string,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes') as string,
-        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      })
-
-      if (value) {
-        this.$accessor.user.ban(member)
-      }
-    }
-
-    async mute(member: Member) {
-      const value = await this.$swal({
-        title: this.$t('context.confirm.mute_title', { name: member.displayname }) as string,
-        text: this.$t('context.confirm.mute_text', { name: member.displayname }) as string,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes') as string,
-        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      })
-
-      if (value) {
-        this.$accessor.user.mute(member)
-      }
-    }
-
-    async unmute(member: Member) {
-      const value = await this.$swal({
-        title: this.$t('context.confirm.unmute_title', { name: member.displayname }) as string,
-        text: this.$t('context.confirm.unmute_text', { name: member.displayname }) as string,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes') as string,
-        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      })
-
-      if (value) {
-        this.$accessor.user.unmute(member)
-      }
-    }
-
-    adminRelease() {
-      this.$accessor.remote.adminRelease()
-    }
-
-    adminControl() {
-      this.$accessor.remote.adminControl()
-    }
-
-    adminGive(member: Member) {
-      this.$accessor.remote.adminGive(member)
-    }
-
-    give(member: Member) {
-      this.$accessor.remote.give(member)
-    }
-
-    ignore(member: Member) {
-      this.$accessor.user.setIgnored({ id: member.id, ignored: true })
-    }
-
-    unignore(member: Member) {
-      this.$accessor.user.setIgnored({ id: member.id, ignored: false })
-    }
-  }
 </script>
+

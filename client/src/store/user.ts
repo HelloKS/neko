@@ -1,85 +1,80 @@
-import { getterTree, mutationTree, actionTree } from 'typed-vuex'
+import { defineStore } from 'pinia'
 import { Member } from '~/neko/types'
 import { EVENT } from '~/neko/events'
 
 import md from 'simple-markdown'
-import { accessor } from '~/store'
-
-export const namespaced = true
+import { useRootStore } from './index'
 
 interface Members {
   [id: string]: Member
 }
 
-export const state = () => ({
-  id: '',
-  members: {} as Members,
-})
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    id: '',
+    members: {} as Members,
+  }),
 
-export const getters = getterTree(state, {
-  member: (state) => state.members[state.id] || null,
-  admin: (state) => (state.members[state.id] ? state.members[state.id].admin : false),
-  muted: (state) => (state.members[state.id] ? state.members[state.id].muted : false),
-})
+  getters: {
+    member: (state) => state.members[state.id] || null,
+    admin: (state) => (state.members[state.id] ? state.members[state.id].admin : false),
+    muted: (state) => (state.members[state.id] ? state.members[state.id].muted : false),
+  },
 
-export const mutations = mutationTree(state, {
-  setIgnored(state, { id, ignored }: { id: string; ignored: boolean }) {
-    state.members[id] = {
-      ...state.members[id],
-      ignored,
-    }
-  },
-  setMuted(state, { id, muted }: { id: string; muted: boolean }) {
-    state.members[id] = {
-      ...state.members[id],
-      muted,
-    }
-  },
-  setMembers(state, members: Member[]) {
-    const data: Members = {}
-    for (const member of members) {
-      data[member.id] = {
-        connected: true,
-        ...member,
-        displayname: md.sanitizeText(member.displayname),
+  actions: {
+    setIgnored({ id, ignored }: { id: string; ignored: boolean }) {
+      this.members[id] = {
+        ...this.members[id],
+        ignored,
       }
-    }
-    state.members = data
-  },
-  setMember(state, id: string) {
-    state.id = id
-  },
-  addMember(state, member: Member) {
-    state.members = {
-      ...state.members,
-      [member.id]: {
-        connected: true,
-        ...member,
-        displayname: md.sanitizeText(member.displayname),
-      },
-    }
-  },
-  delMember(state, id: string) {
-    state.members[id] = {
-      ...state.members[id],
-      connected: false,
-    }
-  },
-  reset(state) {
-    state.members = {}
-  },
-})
+    },
+    setMuted({ id, muted }: { id: string; muted: boolean }) {
+      this.members[id] = {
+        ...this.members[id],
+        muted,
+      }
+    },
+    setMembers(members: Member[]) {
+      const data: Members = {}
+      for (const member of members) {
+        data[member.id] = {
+          connected: true,
+          ...member,
+          displayname: md.sanitizeText(member.displayname),
+        }
+      }
+      this.members = data
+    },
+    setMember(id: string) {
+      this.id = id
+    },
+    addMember(member: Member) {
+      this.members = {
+        ...this.members,
+        [member.id]: {
+          connected: true,
+          ...member,
+          displayname: md.sanitizeText(member.displayname),
+        },
+      }
+    },
+    delMember(id: string) {
+      this.members[id] = {
+        ...this.members[id],
+        connected: false,
+      }
+    },
+    reset() {
+      this.members = {}
+    },
 
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
-    ban({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    ban(member: string | Member) {
+      if (!useRootStore().connected || !this.admin) {
         return
       }
 
       if (typeof member === 'string') {
-        member = state.members[member]
+        member = this.members[member]
       }
 
       if (!member) {
@@ -89,13 +84,13 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.BAN, { id: member.id })
     },
 
-    kick({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    kick(member: string | Member) {
+      if (!useRootStore().connected || !this.admin) {
         return
       }
 
       if (typeof member === 'string') {
-        member = state.members[member]
+        member = this.members[member]
       }
 
       if (!member) {
@@ -105,13 +100,13 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.KICK, { id: member.id })
     },
 
-    mute({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    mute(member: string | Member) {
+      if (!useRootStore().connected || !this.admin) {
         return
       }
 
       if (typeof member === 'string') {
-        member = state.members[member]
+        member = this.members[member]
       }
 
       if (!member) {
@@ -121,13 +116,13 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.MUTE, { id: member.id })
     },
 
-    unmute({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    unmute(member: string | Member) {
+      if (!useRootStore().connected || !this.admin) {
         return
       }
 
       if (typeof member === 'string') {
-        member = state.members[member]
+        member = this.members[member]
       }
 
       if (!member) {
@@ -137,4 +132,4 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.UNMUTE, { id: member.id })
     },
   },
-)
+})

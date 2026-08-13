@@ -1,17 +1,19 @@
-import Vue from 'vue'
+import type { App } from 'vue'
 
 import { SweetAlertOptions } from 'sweetalert2'
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 
 type VueSwalInstance = typeof Swal.fire
 
-declare module 'vue/types/vue' {
-  interface Vue {
+declare global {
+  interface Window {
     $swal: VueSwalInstance
   }
+}
 
-  interface VueConstructor {
-    swal: VueSwalInstance
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    $swal: VueSwalInstance
   }
 }
 
@@ -19,8 +21,8 @@ interface VueSweetalert2Options extends SweetAlertOptions {
   // includeCss?: boolean;
 }
 
-class VueSweetalert2 {
-  static install(vue: Vue | any, options?: VueSweetalert2Options): void {
+const VueSweetalert2 = {
+  install(app: App, options?: VueSweetalert2Options): void {
     const swalFunction = (...args: [SweetAlertOptions]) => {
       if (options) {
         const mixed = Swal.mixin(options)
@@ -46,13 +48,14 @@ class VueSweetalert2 {
       }
     }
 
-    vue['swal'] = swalFunction
+    // window global so library components can use it without a host plugin
+    window.$swal = swalFunction as VueSwalInstance
 
     // add the instance method
-    if (!vue.prototype.hasOwnProperty('$swal')) {
-      vue.prototype.$swal = swalFunction
+    if (!Object.prototype.hasOwnProperty.call(app.config.globalProperties, '$swal')) {
+      app.config.globalProperties.$swal = swalFunction as VueSwalInstance
     }
-  }
+  },
 }
 
 export default VueSweetalert2

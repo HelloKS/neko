@@ -132,44 +132,48 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-about' })
-  export default class About extends Vue {
-    loading = false
-
-    get about() {
-      return this.$accessor.client.about_page
-    }
-
-    async Load() {
-      this.loading = true
-
-      try {
-        const res = await this.$http.get<string>('https://raw.githubusercontent.com/m1k1o/neko/master/README.md')
-        const res2 = await this.$http.post('https://api.github.com/markdown', {
-          text: res.data,
-          mode: 'gfm',
-          context: 'github/gollum',
-        })
-        this.$accessor.client.setAbout(res2.data)
-      } catch (err: any) {
-        console.error(err)
-      } finally {
-        this.loading = false
+  export default defineComponent({
+    name: 'neko-about',
+    data() {
+      return {
+        loading: false,
       }
-    }
+    },
+    computed: {
+      about() {
+        return this.$accessor.client.about_page
+      },
+    },
+    methods: {
+      async Load() {
+        this.loading = true
 
+        try {
+          const res = await this.$http.get<string>('https://raw.githubusercontent.com/m1k1o/neko/master/README.md')
+          const res2 = await this.$http.post('https://api.github.com/markdown', {
+            text: res.data,
+            mode: 'gfm',
+            context: 'github/gollum',
+          })
+          this.$accessor.client.setAbout(res2.data)
+        } catch (err: any) {
+          console.error(err)
+        } finally {
+          this.loading = false
+        }
+      },
+      toggle(event: { target?: HTMLElement }) {
+        if (event.target && event.target.classList.contains('about')) {
+          this.$accessor.client.toggleAbout()
+        }
+      },
+    },
     mounted() {
       if (this.about === '') {
         this.Load()
       }
-    }
-
-    toggle(event: { target?: HTMLElement }) {
-      if (event.target && event.target.classList.contains('about')) {
-        this.$accessor.client.toggleAbout()
-      }
-    }
-  }
+    },
+  })
 </script>

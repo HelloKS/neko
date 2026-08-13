@@ -1,7 +1,7 @@
-import { accessor as neko } from './store'
-import { PluginObject } from 'vue'
+import { defineComponent } from 'vue'
+import { accessor } from './store/accessor'
 
-// Plugins
+// Plugins (re-exported so host apps can register them on their Vue app)
 import Logger from './plugins/log'
 import Client from './plugins/neko'
 import Axios from './plugins/axios'
@@ -9,6 +9,7 @@ import Swal from './plugins/swal'
 import Anime from './plugins/anime'
 import { i18n } from './plugins/i18n'
 
+export { Logger, Client, Axios, Swal, Anime, i18n, plugini18n }
 // Components
 import Connect from '~/components/connect.vue'
 import Video from '~/components/video.vue'
@@ -27,16 +28,10 @@ import Context from '~/components/context.vue'
 import Markdown from '~/components/markdown'
 import Avatar from '~/components/avatar.vue'
 
-// Vue
-import Vue from 'vue'
-import ToolTip from 'v-tooltip'
-
-Vue.use(ToolTip)
-
 const exportMixin = {
   computed: {
     $accessor() {
-      return neko
+      return accessor
     },
     $client() {
       return window.$client
@@ -44,16 +39,22 @@ const exportMixin = {
   },
 }
 
-const plugini18n: PluginObject<undefined> = {
-  install(Vue) {
-    Vue.prototype.i18n = i18n
-    Vue.prototype.$t = i18n.t.bind(i18n)
-    Vue.prototype.$te = i18n.te.bind(i18n)
+const plugini18n = {
+  install(app: any) {
+    app.config.globalProperties.i18n = i18n.global
+    app.config.globalProperties.$t = i18n.global.t.bind(i18n.global)
+    app.config.globalProperties.$te = i18n.global.te.bind(i18n.global)
   },
 }
 
 function extend(component: any) {
-  return component.use(plugini18n).use(Logger).use(Axios).use(Swal).use(Anime).use(Client).extend(exportMixin)
+  return defineComponent({
+    ...component,
+    computed: {
+      ...(component.computed || {}),
+      ...exportMixin.computed,
+    },
+  })
 }
 
 export const NekoConnect = extend(Connect)
@@ -73,5 +74,4 @@ export const NekoMarkdown = extend(Markdown)
 export const NekoContext = extend(Context)
 export const NekoAvatar = extend(Avatar)
 
-neko.initialise()
-export default neko
+export default accessor

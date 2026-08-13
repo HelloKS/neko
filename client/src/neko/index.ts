@@ -1,9 +1,9 @@
-import Vue from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { Member } from './types'
 import { EVENT } from './events'
-import { accessor } from '~/store'
+import { accessor } from '~/store/accessor'
 
 import {
   SystemMessagePayload,
@@ -28,11 +28,11 @@ import {
 interface NekoEvents extends BaseEvents {}
 
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
-  private $vue!: Vue
+  private $vue!: ComponentPublicInstance
   private $accessor!: typeof accessor
   private url!: string
 
-  init(vue: Vue) {
+  init(vue: ComponentPublicInstance) {
     const url =
       import.meta.env.DEV // Vite statically replaces import.meta.env.* (DEV/PROD/MODE + VITE_* from .env.development)
         ? `ws://${location.host.split(':')[0]}:${import.meta.env.VITE_SERVER_PORT}/ws`
@@ -41,7 +41,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.initWithURL(vue, url)
   }
 
-  initWithURL(vue: Vue, url: string) {
+  initWithURL(vue: ComponentPublicInstance, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
     this.url = url

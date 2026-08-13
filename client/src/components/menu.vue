@@ -52,17 +52,19 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-menu' })
-  export default class Menu extends Vue {
-    get admin() {
-      return this.$accessor.user.admin
-    }
-
-    about() {
-      this.$accessor.client.toggleAbout()
-    }
-
-  }
+  export default defineComponent({
+    name: 'neko-menu',
+    computed: {
+      admin() {
+        return this.$accessor.user.admin
+      },
+    },
+    methods: {
+      about() {
+        this.$accessor.client.toggleAbout()
+      },
+    },
+  })
 </script>

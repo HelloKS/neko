@@ -84,14 +84,14 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Watch } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
   import Settings from '~/components/settings.vue'
   import Chat from '~/components/chat.vue'
   import Files from '~/components/files.vue'
   import Members from '~/components/members.vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko',
     components: {
       'neko-settings': Settings,
@@ -99,49 +99,58 @@
       'neko-files': Files,
       'neko-members': Members,
     },
-  })
-  export default class Side extends Vue {
-    get filetransferAllowed() {
-      return (
-        this.$accessor.remote.fileTransfer && (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
-      )
-    }
+    computed: {
+      filetransferAllowed() {
+        return (
+          this.$accessor.remote.fileTransfer &&
+          (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
+        )
+      },
+      tab() {
+        return this.$accessor.client.tab
+      },
+      membersCount() {
+        var members = this.$accessor.user.members
+        var curMembers = 0
 
-    get tab() {
-      return this.$accessor.client.tab
-    }
+        Object.keys(members).forEach(function (key) {
+          if (members[key].connected) {
+            curMembers++
+          }
+        })
 
-    get membersCount() {
-      var members = this.$accessor.user.members
-      var curMembers = 0;
-
-      Object.keys(members).forEach(function(key) {
-        if (members[key].connected) {
-          curMembers++;
+        return curMembers
+      },
+    },
+    watch: {
+      tab: {
+        immediate: true,
+        handler() {
+          this.onTabChange()
+        },
+      },
+      filetransferAllowed: {
+        immediate: true,
+        handler() {
+          this.onTabChange()
+        },
+      },
+    },
+    methods: {
+      onTabChange() {
+        // do not show the files tab if file transfer is disabled
+        if (this.tab === 'files' && !this.filetransferAllowed) {
+          this.change('chat')
         }
-      });
-
-      return curMembers;
-    }
-
-    @Watch('tab', { immediate: true })
-    @Watch('filetransferAllowed', { immediate: true })
-    onTabChange() {
-      // do not show the files tab if file transfer is disabled
-      if (this.tab === 'files' && !this.filetransferAllowed) {
-        this.change('chat')
-      }
-    }
-
-    @Watch('filetransferAllowed')
-    onFileTransferAllowedChange() {
-      if (this.filetransferAllowed) {
-        this.$accessor.files.refresh()
-      }
-    }
-
-    change(tab: string) {
-      this.$accessor.client.setTab(tab)
-    }
-  }
+      },
+      onFileTransferAllowedChange() {
+        if (this.filetransferAllowed) {
+          this.$accessor.files.refresh()
+        }
+      },
+      change(tab: string) {
+        this.$accessor.client.setTab(tab)
+      },
+    },
+  })
 </script>

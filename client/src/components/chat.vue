@@ -1,9 +1,8 @@
 <template>
   <div class="chat">
     <ul class="chat-history" ref="history" @click="onClick">
-      <template v-for="(message, index) in history">
+      <template v-for="(message, index) in history" :key="index">
         <li
-          :key="index"
           class="message"
           v-if="message.type === 'text'"
           :class="{
@@ -96,7 +95,7 @@
         background-color: $background-floating;
       }
 
-      ::v-deep *::selection {
+      :deep(*)::selection {
         background: $text-link;
       }
 
@@ -163,7 +162,7 @@
               }
             }
 
-            ::v-deep .content-body {
+            :deep(.content-body) {
               color: $text-normal;
               line-height: 22px;
               word-wrap: break-word;
@@ -397,7 +396,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
   import { formatRelative } from 'date-fns'
 
   import { Member } from '~/neko/types'
@@ -409,7 +408,7 @@
 
   const length = 512 // max length of message
 
-  @Component({
+  export default defineComponent({
     name: 'neko-chat',
     components: {
       'neko-markdown': Markdown,
@@ -417,191 +416,191 @@
       'neko-emoji': Emoji,
       'neko-avatar': Avatar,
     },
-  })
-  export default class Chat extends Vue {
-    @Ref('input') readonly _input!: HTMLTextAreaElement
-    @Ref('hinput') readonly _hinput!: HTMLInputElement
-    @Ref('history') readonly _history!: HTMLElement
-    @Ref('context') readonly _context!: any
-
-    emoji = false
-    content = ''
-
-    get id() {
-      return this.$accessor.user.id
-    }
-
-    get muted() {
-      return this.$accessor.user.muted
-    }
-
-    get history() {
-      return this.$accessor.chat.history
-    }
-
-    @Watch('history')
-    onHistroyChange() {
-      this.$nextTick(() => {
-        if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120) {
-          setTimeout(() => {
+    data() {
+      return {
+        emoji: false,
+        content: '',
+      }
+    },
+    computed: {
+      _input() {
+        return this.$refs.input as HTMLTextAreaElement
+      },
+      _hinput() {
+        return this.$refs.hinput as HTMLInputElement
+      },
+      _history() {
+        return this.$refs.history as HTMLElement
+      },
+      _context() {
+        return this.$refs.context as any
+      },
+      id() {
+        return this.$accessor.user.id
+      },
+      muted() {
+        return this.$accessor.user.muted
+      },
+      history() {
+        return this.$accessor.chat.history
+      },
+    },
+    watch: {
+      history() {
+        this.$nextTick(() => {
+          if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120) {
+            setTimeout(() => {
               this._history.scrollTop = this._history.scrollHeight
 
-            if (this.history.length > 200) {
-              this.history.splice(0, this.history.length - 200)
-            }
-          }, 100);
+              if (this.history.length > 200) {
+                this.history.splice(0, this.history.length - 200)
+              }
+            }, 100)
+          }
+        })
+      },
+      muted(muted: boolean) {
+        if (muted) {
+          this.content = ''
         }
-      })
-    }
+      },
+    },
+    methods: {
+      member(id: string) {
+        return this.$accessor.user.members[id] || { id, displayname: this.$t('somebody') }
+      },
+      timestamp(time: Date) {
+        const str = formatRelative(time, new Date())
+        return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
+      },
+      onImage(e: any) {
+        let selectedFile = e.target.files[0]
+        const imageCanvas = document.getElementById('imageCanvas') as HTMLCanvasElement
+        const ctx = imageCanvas.getContext('2d')
 
-    @Watch('muted')
-    onMutedChange(muted: boolean) {
-      if (muted) {
-        this.content = ''
-      }
-    }
+        if (!selectedFile) {
+          return
+        }
 
+        const reader = new FileReader()
+        reader.onload = (e: ProgressEvent<FileReader>) => {
+          const img = new Image()
+          img.onload = () => {
+            const maxHeight = 100 // 최대 가로 픽셀
+            let newWidth = img.width
+            let newHeight = img.height
+
+            if (img.width > maxHeight) {
+              newWidth = (img.width * maxHeight) / img.height // 비율 유지
+              newHeight = maxHeight
+            }
+
+            imageCanvas.width = newWidth
+            imageCanvas.height = newHeight
+
+            ctx?.clearRect(0, 0, newWidth, newHeight)
+            ctx?.drawImage(img, 0, 0, newWidth, newHeight)
+
+            const base64Image = imageCanvas.toDataURL('image/jpeg', 0.8)
+
+            this.$accessor.chat.sendMessage('img[[' + base64Image + ']]')
+          }
+
+          img.src = e.target!.result as string
+        }
+        reader.readAsDataURL(selectedFile)
+      },
+      onEmoji() {
+        this.emoji = !this.emoji
+        this._input.focus()
+      },
+      onEmojiPicked(emoji: string) {
+        const text = `:${emoji}:`
+        if (this._input.selectionStart || this._input.selectionStart === 0) {
+          var startPos = this._input.selectionStart
+          var endPos = this._input.selectionEnd
+          this.content = this.content.substring(0, startPos) + text + this.content.substring(endPos, this.content.length)
+          this.$nextTick(() => {
+            this._input.selectionStart = startPos + text.length
+            this._input.selectionEnd = startPos + text.length
+          })
+        } else {
+          this.content += text
+        }
+        this._input.focus()
+        this.emoji = false
+      },
+      onContext(event: MouseEvent, { member }: { member: Member }) {
+        if (member.id === this.id) {
+          return
+        }
+        this._context.open(event, { member })
+      },
+      onClick(event: { target?: HTMLElement; preventDefault(): void }) {
+        const { target } = event
+        if (!target) {
+          return
+        }
+
+        if (target.tagName.toLowerCase() === 'span' && target.classList.contains('spoiler')) {
+          target.classList.add('active')
+          event.preventDefault()
+        }
+
+        if (!target.parentElement) {
+          return
+        }
+
+        if (target.parentElement.tagName.toLowerCase() === 'span' && target.parentElement.classList.contains('spoiler')) {
+          target.parentElement.classList.add('active')
+          event.preventDefault()
+        }
+      },
+      onKeyDown(event: KeyboardEvent) {
+        // Do nothing if user is muted by admin
+        if (this.muted) {
+          return
+        }
+
+        // Workaround: ignore IME composing event
+        if (event.isComposing || event.key === 'Process') {
+          return
+        }
+
+        if (event.key === 'Enter' && !event.shiftKey) {
+          // Prevent enter keypress event
+          event.preventDefault()
+
+          // Workaround: iOS IME CJK compositing buffer bug
+          this._hinput.focus()
+          this._input.focus()
+
+          // Check if text is empty
+          if (this.content.length === 0) {
+            return
+          }
+
+          // Cut message if it's over limit and notify to user
+          if (this.content.length > length) {
+            this.content = this.content.substring(0, length)
+            return
+          }
+
+          this.$accessor.chat.sendMessage(this.content)
+          this.content = ''
+          this.$nextTick(() => {
+            this._history.scrollTop = this._history.scrollHeight
+          })
+
+          return
+        }
+      },
+    },
     mounted() {
       this.$nextTick(() => {
         this._history.scrollTop = this._history.scrollHeight
       })
-    }
-
-    member(id: string) {
-      return this.$accessor.user.members[id] || { id, displayname: this.$t('somebody') }
-    }
-
-    timestamp(time: Date) {
-      const str = formatRelative(time, new Date())
-      return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
-    }
-    
-    onImage(e: any) {
-      let selectedFile = e.target.files[0];
-      const imageCanvas = document.getElementById('imageCanvas') as HTMLCanvasElement;
-      const ctx = imageCanvas.getContext('2d');
-
-      if (!selectedFile) {
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-          const img = new Image();
-          img.onload = () => {
-              const maxHeight = 100; // 최대 가로 픽셀
-              let newWidth = img.width;
-              let newHeight = img.height;
-
-              if (img.width > maxHeight) {
-                  newWidth = (img.width * maxHeight) / img.height; // 비율 유지
-                  newHeight = maxHeight;
-              }
-
-              imageCanvas.width = newWidth;
-              imageCanvas.height = newHeight;
-
-              ctx?.clearRect(0, 0, newWidth, newHeight);
-              ctx?.drawImage(img, 0, 0, newWidth, newHeight);
-
-              const base64Image = imageCanvas.toDataURL('image/jpeg', 0.8);
-
-              this.$accessor.chat.sendMessage('img[[' + base64Image + ']]')
-          };
-
-          img.src = e.target!.result as string;
-        };
-        reader.readAsDataURL(selectedFile);
-    }
-
-    onEmoji() {
-      this.emoji = !this.emoji
-      this._input.focus()
-    }
-
-    onEmojiPicked(emoji: string) {
-      const text = `:${emoji}:`
-      if (this._input.selectionStart || this._input.selectionStart === 0) {
-        var startPos = this._input.selectionStart
-        var endPos = this._input.selectionEnd
-        this.content = this.content.substring(0, startPos) + text + this.content.substring(endPos, this.content.length)
-        this.$nextTick(() => {
-          this._input.selectionStart = startPos + text.length
-          this._input.selectionEnd = startPos + text.length
-        })
-      } else {
-        this.content += text
-      }
-      this._input.focus()
-      this.emoji = false
-    }
-
-    onContext(event: MouseEvent, { member }: { member: Member }) {
-      if (member.id === this.id) {
-        return
-      }
-      this._context.open(event, { member })
-    }
-
-    onClick(event: { target?: HTMLElement; preventDefault(): void }) {
-      const { target } = event
-      if (!target) {
-        return
-      }
-
-      if (target.tagName.toLowerCase() === 'span' && target.classList.contains('spoiler')) {
-        target.classList.add('active')
-        event.preventDefault()
-      }
-
-      if (!target.parentElement) {
-        return
-      }
-
-      if (target.parentElement.tagName.toLowerCase() === 'span' && target.parentElement.classList.contains('spoiler')) {
-        target.parentElement.classList.add('active')
-        event.preventDefault()
-      }
-    }
-
-    onKeyDown(event: KeyboardEvent) {
-      // Do nothing if user is muted by admin
-      if (this.muted) {
-        return
-      }
-
-      // Workaround: ignore IME composing event
-      if (event.isComposing || event.key === 'Process') {
-        return
-      }
-
-      if (event.key === 'Enter' && !event.shiftKey) {
-        // Prevent enter keypress event
-        event.preventDefault()
-
-        // Workaround: iOS IME CJK compositing buffer bug
-        this._hinput.focus()
-        this._input.focus()
-
-        // Check if text is empty
-        if (this.content.length === 0) {
-          return
-        }
-
-        // Cut message if it's over limit and notify to user
-        if (this.content.length > length) {
-          this.content = this.content.substring(0, length)
-          return
-        }
-
-        this.$accessor.chat.sendMessage(this.content)
-        this.content = ''
-        this.$nextTick(() => {
-          this._history.scrollTop = this._history.scrollHeight
-        })
-
-        return
-      }
-    }
-  }
+    },
+  })
 </script>
+

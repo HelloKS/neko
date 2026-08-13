@@ -313,93 +313,98 @@
 </style>
 
 <script lang="ts">
-  import { Component, Watch, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
   import { messages } from '~/locale'
 
-  @Component({ name: 'neko-settings' })
-  export default class Settings extends Vue {
-    private broadcast_url: string = ''
-
-    get admin() {
-      return this.$accessor.user.admin
-    }
-
-    get langs() {
-      return Object.keys(messages)
-    }
-
-    get connected() {
-      return this.$accessor.connected
-    }
-
-    get scroll() {
-      return this.$accessor.settings.scroll.toString()
-    }
-
-    set scroll(value: string) {
-      this.$accessor.settings.setScroll(parseInt(value))
-    }
-
-    get scroll_invert() {
-      return this.$accessor.settings.scroll_invert
-    }
-
-    set scroll_invert(value: boolean) {
-      this.$accessor.settings.setInvert(value)
-    }
-
-    get autoplay() {
-      return this.$accessor.settings.autoplay
-    }
-
-    set autoplay(value: boolean) {
-      this.$accessor.settings.setAutoplay(value)
-    }
-
-    get ignore_emotes() {
-      return this.$accessor.settings.ignore_emotes
-    }
-
-    set ignore_emotes(value: boolean) {
-      this.$accessor.settings.setIgnore(value)
-    }
-
-    get chat_sound() {
-      return this.$accessor.settings.chat_sound
-    }
-
-    set chat_sound(value: boolean) {
-      this.$accessor.settings.setSound(value)
-    }
-
-    get keyboard_layouts_list() {
-      return this.$accessor.settings.keyboard_layouts_list
-    }
-
-    get keyboard_layout() {
-      return this.$accessor.settings.keyboard_layout
-    }
-
-    get broadcast_is_active() {
-      return this.$accessor.settings.broadcast_is_active
-    }
-
-    get broadcast_url_remote() {
-      return this.$accessor.settings.broadcast_url
-    }
-
-    @Watch('broadcast_url_remote', { immediate: true })
-    onBroadcastUrlChange() {
-      this.broadcast_url = this.broadcast_url_remote
-    }
-
-    set keyboard_layout(value: string) {
-      this.$accessor.settings.setKeyboardLayout(value)
-      this.$accessor.remote.changeKeyboard()
-    }
-
-    logout() {
-      this.$accessor.logout()
-    }
-  }
+  export default defineComponent({
+    name: 'neko-settings',
+    data() {
+      return {
+        broadcast_url: '',
+      }
+    },
+    computed: {
+      admin() {
+        return this.$accessor.user.admin
+      },
+      langs() {
+        return Object.keys(messages)
+      },
+      connected() {
+        return this.$accessor.connected
+      },
+      scroll: {
+        get(): string {
+          return this.$accessor.settings.scroll.toString()
+        },
+        set(value: string) {
+          this.$accessor.settings.setScroll(parseInt(value))
+        },
+      },
+      scroll_invert: {
+        get(): boolean {
+          return this.$accessor.settings.scroll_invert
+        },
+        set(value: boolean) {
+          this.$accessor.settings.setInvert(value)
+        },
+      },
+      autoplay: {
+        get(): boolean {
+          return this.$accessor.settings.autoplay
+        },
+        set(value: boolean) {
+          this.$accessor.settings.setAutoplay(value)
+        },
+      },
+      ignore_emotes: {
+        get(): boolean {
+          return this.$accessor.settings.ignore_emotes
+        },
+        set(value: boolean) {
+          this.$accessor.settings.setIgnore(value)
+        },
+      },
+      chat_sound: {
+        get(): boolean {
+          return this.$accessor.settings.chat_sound
+        },
+        set(value: boolean) {
+          this.$accessor.settings.setSound(value)
+        },
+      },
+      keyboard_layouts_list() {
+        return this.$accessor.settings.keyboard_layouts_list
+      },
+      keyboard_layout: {
+        get(): string {
+          return this.$accessor.settings.keyboard_layout
+        },
+        set(value: string) {
+          this.$accessor.settings.setKeyboardLayout(value)
+          this.$accessor.remote.changeKeyboard()
+        },
+      },
+      broadcast_is_active() {
+        return this.$accessor.settings.broadcast_is_active
+      },
+      broadcast_url_remote() {
+        return this.$accessor.settings.broadcast_url
+      },
+    },
+    watch: {
+      broadcast_url_remote: {
+        immediate: true,
+        handler() {
+          this.broadcast_url = this.broadcast_url_remote
+        },
+      },
+    },
+    methods: {
+      logout() {
+        this.$accessor.logout()
+      },
+    },
+  })
 </script>
+

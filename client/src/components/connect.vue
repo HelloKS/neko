@@ -147,15 +147,65 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-connect' })
-  export default class Connect extends Vue {
-    private autoPassword: string | null = new URL(location.href).searchParams.get('pwd')
+  export default defineComponent({
+    name: 'neko-connect',
+    data() {
+      return {
+        autoPassword: new URL(location.href).searchParams.get('pwd') as string | null,
+        displayname: '',
+        password: '',
+      }
+    },
+    computed: {
+      connecting() {
+        return this.$accessor.connecting
+      },
+    },
+    methods: {
+      removeUrlParam(param: string) {
+        let url = document.location.href
+        let urlparts = url.split('?')
 
-    private displayname: string = ''
-    private password: string = ''
+        if (urlparts.length >= 2) {
+          let urlBase = urlparts.shift()
+          let queryString = urlparts.join('?')
 
+          let prefix = encodeURIComponent(param) + '='
+          let pars = queryString.split(/[&;]/g)
+          for (let i = pars.length; i-- > 0; ) {
+            if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+              pars.splice(i, 1)
+            }
+          }
+
+          url = urlBase + (pars.length > 0 ? '?' + pars.join('&') : '')
+          window.history.pushState('', document.title, url)
+        }
+      },
+      login() {
+        let password = this.password
+        if (this.autoPassword !== null) {
+          password = this.autoPassword
+        }
+
+        if (this.displayname == '') {
+          this.$swal({
+            title: this.$t('connect.error') as string,
+            text: this.$t('connect.empty_displayname') as string,
+            icon: 'error',
+          })
+          return
+        }
+
+        this.$accessor.login({ displayname: this.displayname, password })
+        this.autoPassword = null
+      },
+      about() {
+        this.$accessor.client.toggleAbout()
+      },
+    },
     mounted() {
       // auto-password fill
       let password = this.$accessor.password
@@ -176,54 +226,7 @@
         this.$accessor.login({ displayname, password })
         this.autoPassword = null
       }
-    }
-
-    get connecting() {
-      return this.$accessor.connecting
-    }
-
-    removeUrlParam(param: string) {
-      let url = document.location.href
-      let urlparts = url.split('?')
-
-      if (urlparts.length >= 2) {
-        let urlBase = urlparts.shift()
-        let queryString = urlparts.join('?')
-
-        let prefix = encodeURIComponent(param) + '='
-        let pars = queryString.split(/[&;]/g)
-        for (let i = pars.length; i-- > 0; ) {
-          if (pars[i].lastIndexOf(prefix, 0) !== -1) {
-            pars.splice(i, 1)
-          }
-        }
-
-        url = urlBase + (pars.length > 0 ? '?' + pars.join('&') : '')
-        window.history.pushState('', document.title, url)
-      }
-    }
-
-    login() {
-      let password = this.password
-      if (this.autoPassword !== null) {
-        password = this.autoPassword
-      }
-
-      if (this.displayname == '') {
-        this.$swal({
-          title: this.$t('connect.error') as string,
-          text: this.$t('connect.empty_displayname') as string,
-          icon: 'error',
-        })
-        return
-      }
-
-      this.$accessor.login({ displayname: this.displayname, password })
-      this.autoPassword = null
-    }
-
-    about() {
-      this.$accessor.client.toggleAbout()
-    }
-  }
+    },
+  })
 </script>
+

@@ -1,4 +1,4 @@
-import { PluginObject } from 'vue'
+import type { App } from 'vue'
 import { NekoClient } from '~/neko'
 
 declare global {
@@ -9,21 +9,21 @@ declare global {
   }
 }
 
-declare module 'vue/types/vue' {
-  interface Vue {
+declare module 'vue' {
+  interface ComponentCustomProperties {
     $client: NekoClient
   }
 }
 
-const plugin: PluginObject<undefined> = {
-  install(Vue) {
+const plugin = {
+  install(app: App) {
     window.$client = new NekoClient()
       .on('error', window.$log.error)
       .on('warn', window.$log.warn)
       .on('info', window.$log.info)
       .on('debug', window.$log.debug)
 
-    Vue.prototype.$client = window.$client
+    app.config.globalProperties.$client = window.$client
   },
 }
 

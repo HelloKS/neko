@@ -1,4 +1,4 @@
-import { PluginObject } from 'vue'
+import type { App } from 'vue'
 import anime, { StaggerOptions, AnimeTimelineInstance, AnimeParams, AnimeInstance } from 'animejs'
 
 type FunctionBasedParameter = (element: HTMLElement, index: number, length: number) => number
@@ -29,15 +29,22 @@ interface Anime {
   random(min: number, max: number): number
 }
 
-declare module 'vue/types/vue' {
-  interface Vue {
+declare module 'vue' {
+  interface ComponentCustomProperties {
     $anime: AnimeFunc & Anime
   }
 }
 
-const plugin: PluginObject<undefined> = {
-  install(Vue) {
-    Vue.prototype.$anime = anime
+declare global {
+  interface Window {
+    $anime: AnimeFunc & Anime
+  }
+}
+
+const plugin = {
+  install(app: App) {
+    app.config.globalProperties.$anime = anime
+    window.$anime = anime
   },
 }
 

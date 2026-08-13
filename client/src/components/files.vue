@@ -265,135 +265,68 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  import Markdown from './markdown'
-  import Content from './context.vue'
   import { FileTransfer, FileListItem } from '~/neko/types'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-files',
-    components: {
-      'neko-markdown': Markdown,
-      'neko-context': Content,
+    data() {
+      return {
+        uploadAreaDrag: false,
+      }
     },
-  })
-  export default class Files extends Vue {
-    public uploadAreaDrag: boolean = false
+    computed: {
+      cwd() {
+        return this.$accessor.files.cwd
+      },
+      files() {
+        return this.$accessor.files.files
+      },
+      transfers() {
+        return this.$accessor.files.transfers
+      },
+      downloads() {
+        return this.$accessor.files.transfers.filter((t) => t.direction === 'download')
+      },
+      uploads() {
+        return this.$accessor.files.transfers.filter((t) => t.direction === 'upload')
+      },
+    },
+    methods: {
+      refresh() {
+        this.$accessor.files.refresh()
+      },
+      download(item: FileListItem) {
+        if (this.downloads.map((t) => t.name).includes(item.name)) {
+          return
+        }
 
-    get cwd() {
-      return this.$accessor.files.cwd
-    }
-
-    get files() {
-      return this.$accessor.files.files
-    }
-
-    get transfers() {
-      return this.$accessor.files.transfers
-    }
-
-    get downloads() {
-      return this.$accessor.files.transfers.filter((t) => t.direction === 'download')
-    }
-
-    get uploads() {
-      return this.$accessor.files.transfers.filter((t) => t.direction === 'upload')
-    }
-
-    refresh() {
-      this.$accessor.files.refresh()
-    }
-
-    download(item: FileListItem) {
-      if (this.downloads.map((t) => t.name).includes(item.name)) {
-        return
-      }
-
-      const url =
-        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
-      const abortController = new AbortController()
-
-      let transfer: FileTransfer = {
-        id: Math.round(Math.random() * 10000),
-        name: item.name,
-        direction: 'download',
-        // this may be smaller than the actual transfer amount, but for large files the
-        // content length is not sent (chunked transfer)
-        size: item.size,
-        progress: 0,
-        status: 'pending',
-        abortController: abortController,
-      }
-
-      this.$http
-        .get(url, {
-          responseType: 'blob',
-          signal: abortController.signal,
-          withCredentials: false,
-          onDownloadProgress: (x) => {
-            transfer.progress = x.loaded
-
-            if (x.total && transfer.size !== x.total) {
-              transfer.size = x.total
-            }
-            if (transfer.progress === transfer.size) {
-              transfer.status = 'completed'
-            } else if (transfer.status !== 'inprogress') {
-              transfer.status = 'inprogress'
-            }
-          },
-        })
-        .then((res) => {
-          const url = window.URL.createObjectURL(new Blob([res.data]))
-          const link = document.createElement('a')
-          link.href = url
-          link.setAttribute('download', item.name)
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-
-          transfer.progress = transfer.size
-          transfer.status = 'completed'
-        })
-        .catch((error) => {
-          this.$log.error(error)
-
-          transfer.status = 'failed'
-          transfer.error = error.message
-        })
-
-      this.$accessor.files.addTransfer(transfer)
-    }
-
-    upload(dt: DataTransfer) {
-      const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password)
-      this.uploadAreaDrag = false
-
-      for (const file of dt.files) {
+        const url =
+          '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
         const abortController = new AbortController()
-
-        const formdata = new FormData()
-        formdata.append('files', file, file.name)
 
         let transfer: FileTransfer = {
           id: Math.round(Math.random() * 10000),
-          name: file.name,
-          direction: 'upload',
-          size: file.size,
+          name: item.name,
+          direction: 'download',
+          // this may be smaller than the actual transfer amount, but for large files the
+          // content length is not sent (chunked transfer)
+          size: item.size,
           progress: 0,
           status: 'pending',
           abortController: abortController,
         }
 
         this.$http
-          .post(url, formdata, {
+          .get(url, {
+            responseType: 'blob',
             signal: abortController.signal,
             withCredentials: false,
-            onUploadProgress: (x: any) => {
+            onDownloadProgress: (x) => {
               transfer.progress = x.loaded
 
-              if (transfer.size !== x.total) {
+              if (x.total && transfer.size !== x.total) {
                 transfer.size = x.total
               }
               if (transfer.progress === transfer.size) {
@@ -403,6 +336,18 @@
               }
             },
           })
+          .then((res) => {
+            const url = window.URL.createObjectURL(new Blob([res.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', item.name)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+
+            transfer.progress = transfer.size
+            transfer.status = 'completed'
+          })
           .catch((error) => {
             this.$log.error(error)
 
@@ -411,110 +356,154 @@
           })
 
         this.$accessor.files.addTransfer(transfer)
-      }
-    }
+      },
+      upload(dt: DataTransfer) {
+        const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password)
+        this.uploadAreaDrag = false
 
-    openFileBrowser() {
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.setAttribute('multiple', 'true')
-      input.onchange = (e: Event) => {
-        if (e === null) return
+        for (const file of dt.files) {
+          const abortController = new AbortController()
 
-        const dt = new DataTransfer()
-        const target = e.target as HTMLInputElement
-        if (target.files === null) return
+          const formdata = new FormData()
+          formdata.append('files', file, file.name)
 
-        for (const f of target.files) {
-          dt.items.add(f)
+          let transfer: FileTransfer = {
+            id: Math.round(Math.random() * 10000),
+            name: file.name,
+            direction: 'upload',
+            size: file.size,
+            progress: 0,
+            status: 'pending',
+            abortController: abortController,
+          }
+
+          this.$http
+            .post(url, formdata, {
+              signal: abortController.signal,
+              withCredentials: false,
+              onUploadProgress: (x: any) => {
+                transfer.progress = x.loaded
+
+                if (transfer.size !== x.total) {
+                  transfer.size = x.total
+                }
+                if (transfer.progress === transfer.size) {
+                  transfer.status = 'completed'
+                } else if (transfer.status !== 'inprogress') {
+                  transfer.status = 'inprogress'
+                }
+              },
+            })
+            .catch((error) => {
+              this.$log.error(error)
+
+              transfer.status = 'failed'
+              transfer.error = error.message
+            })
+
+          this.$accessor.files.addTransfer(transfer)
         }
+      },
+      openFileBrowser() {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.setAttribute('multiple', 'true')
+        input.onchange = (e: Event) => {
+          if (e === null) return
 
-        this.upload(dt)
-      }
-      input.click()
-    }
+          const dt = new DataTransfer()
+          const target = e.target as HTMLInputElement
+          if (target.files === null) return
 
-    removeTransfer(transfer: FileTransfer) {
-      if (transfer.status !== 'completed') {
-        transfer.abortController?.abort()
-      }
-      this.$accessor.files.removeTransfer(transfer)
-    }
+          for (const f of target.files) {
+            dt.items.add(f)
+          }
 
-    fileIcon(file: FileListItem) {
-      let className = 'file-icon fas '
-      // if is directory
-      if (file.type === 'dir') {
-        className += 'fa-folder'
-        return className
-      }
-      // try to get file extension
-      const ext = file.name.split('.').pop()
-      if (ext === undefined) {
-        className += 'fa-file'
-        return className
-      }
-      // try to find icon
-      switch (ext.toLowerCase()) {
-        case 'txt':
-        case 'md':
-          className += 'fa-file-text'
-          break
-        case 'pdf':
-          className += 'fa-file-pdf'
-          break
-        case 'zip':
-        case 'rar':
-        case '7z':
-        case 'gz':
-          className += 'fa-archive'
-          break
-        case 'aac':
-        case 'flac':
-        case 'midi':
-        case 'mp3':
-        case 'ogg':
-        case 'wav':
-          className += 'fa-music'
-          break
-        case 'avi':
-        case 'mkv':
-        case 'mov':
-        case 'mpeg':
-        case 'mp4':
-        case 'webm':
-          className += 'fa-film'
-          break
-        case 'bmp':
-        case 'gif':
-        case 'jpeg':
-        case 'jpg':
-        case 'png':
-        case 'svg':
-        case 'tiff':
-        case 'webp':
-          className += 'fa-image'
-          break
-        default:
+          this.upload(dt)
+        }
+        input.click()
+      },
+      removeTransfer(transfer: FileTransfer) {
+        if (transfer.status !== 'completed') {
+          transfer.abortController?.abort()
+        }
+        this.$accessor.files.removeTransfer(transfer)
+      },
+      fileIcon(file: FileListItem) {
+        let className = 'file-icon fas '
+        // if is directory
+        if (file.type === 'dir') {
+          className += 'fa-folder'
+          return className
+        }
+        // try to get file extension
+        const ext = file.name.split('.').pop()
+        if (ext === undefined) {
           className += 'fa-file'
-      }
-      return className
-    }
-
-    fileSize(size: number) {
-      if (size < 1024) {
-        return size + ' B'
-      }
-      if (size < 1024 * 1024) {
-        return Math.round(size / 1024) + ' KB'
-      }
-      if (size < 1024 * 1024 * 1024) {
-        return Math.round(size / (1024 * 1024)) + ' MB'
-      }
-      if (size < 1024 * 1024 * 1024 * 1024) {
-        return Math.round(size / (1024 * 1024 * 1024)) + ' GB'
-      }
-      return Math.round(size / (1024 * 1024 * 1024 * 1024)) + ' TB'
-    }
-  }
+          return className
+        }
+        // try to find icon
+        switch (ext.toLowerCase()) {
+          case 'txt':
+          case 'md':
+            className += 'fa-file-text'
+            break
+          case 'pdf':
+            className += 'fa-file-pdf'
+            break
+          case 'zip':
+          case 'rar':
+          case '7z':
+          case 'gz':
+            className += 'fa-archive'
+            break
+          case 'aac':
+          case 'flac':
+          case 'midi':
+          case 'mp3':
+          case 'ogg':
+          case 'wav':
+            className += 'fa-music'
+            break
+          case 'avi':
+          case 'mkv':
+          case 'mov':
+          case 'mpeg':
+          case 'mp4':
+          case 'webm':
+            className += 'fa-film'
+            break
+          case 'bmp':
+          case 'gif':
+          case 'jpeg':
+          case 'jpg':
+          case 'png':
+          case 'svg':
+          case 'tiff':
+          case 'webp':
+            className += 'fa-image'
+            break
+          default:
+            className += 'fa-file'
+        }
+        return className
+      },
+      fileSize(size: number) {
+        if (size < 1024) {
+          return size + ' B'
+        }
+        if (size < 1024 * 1024) {
+          return Math.round(size / 1024) + ' KB'
+        }
+        if (size < 1024 * 1024 * 1024) {
+          return Math.round(size / (1024 * 1024)) + ' MB'
+        }
+        if (size < 1024 * 1024 * 1024 * 1024) {
+          return Math.round(size / (1024 * 1024 * 1024)) + ' GB'
+        }
+        return Math.round(size / (1024 * 1024 * 1024 * 1024)) + ' TB'
+      },
+    },
+  })
 </script>
+

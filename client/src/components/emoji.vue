@@ -287,103 +287,104 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue } from 'vue-property-decorator'
-  import { directive as onClickaway } from 'vue-clickaway'
+  import { defineComponent } from 'vue'
+  import { onClickaway } from '../utils/clickaway'
   import { get } from '../utils/localstorage'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-emoji',
     directives: {
       onClickaway,
     },
+    data() {
+      return {
+        waitingForPaint: false,
+        search: '',
+        index: 0,
+        hovered: '',
+        recent: JSON.parse(get('emoji_recent', '[]')) as string[],
+      }
+    },
+    computed: {
+      _scroll() {
+        return this.$refs.scroll as HTMLElement
+      },
+      _search() {
+        return this.$refs.search as HTMLInputElement
+      },
+      _groups() {
+        return this.$refs.groups as HTMLElement[]
+      },
+      active() {
+        return this.$accessor.emoji.groups[this.index]
+      },
+      keywords() {
+        return this.$accessor.emoji.keywords
+      },
+      groups() {
+        return this.$accessor.emoji.groups
+      },
+      list() {
+        return this.$accessor.emoji.list
+      },
+      filtered() {
+        const filtered = []
+        for (const emoji of this.list) {
+          if (
+            emoji.includes(this.search) ||
+            typeof this.keywords[emoji] !== 'undefined'
+              ? this.keywords[emoji].some((keyword) => keyword.includes(this.search))
+              : false
+          ) {
+            filtered.push(emoji)
+          }
+        }
+        return filtered
+      },
+    },
+    methods: {
+      scrollTo(event: MouseEvent, index: number) {
+        if (!this._groups[index]) {
+          return
+        }
+        this._scroll.scrollTop = index == 0 ? 0 : this._groups[index].offsetTop
+      },
+      onScroll() {
+        if (!this.waitingForPaint) {
+          this.waitingForPaint = true
+          window.requestAnimationFrame(this.onScrollPaint.bind(this))
+        }
+      },
+      onScrollPaint() {
+        this.waitingForPaint = false
+        let scrollTop = this._scroll.scrollTop
+        let active = 0
+        for (const [i] of this.groups.entries()) {
+          let component = this._groups[i]
+          if (component && component.offsetTop > scrollTop) {
+            break
+          }
+          active = i
+        }
+        if (this.index !== active) {
+          this.index = active
+        }
+      },
+      onMouseExit() {
+        this.hovered = ''
+      },
+      onMouseEnter(event: MouseEvent, emoji: string) {
+        this.hovered = emoji
+        this._search.placeholder = `:${emoji}:`
+      },
+      onClick(event: MouseEvent, emoji: string) {
+        this.$accessor.emoji.setRecent(emoji)
+        this.$emit('picked', emoji)
+      },
+      onClickAway() {
+        this.$emit('done')
+      },
+    },
   })
-  export default class Emoji extends Vue {
-    @Ref('scroll') readonly _scroll!: HTMLElement
-    @Ref('search') readonly _search!: HTMLInputElement
-    @Ref('groups') readonly _groups!: HTMLElement[]
-
-    waitingForPaint = false
-    search = ''
-    index = 0
-    hovered = ''
-    recent: string[] = JSON.parse(get('emoji_recent', '[]'))
-
-    get active() {
-      return this.$accessor.emoji.groups[this.index]
-    }
-
-    get keywords() {
-      return this.$accessor.emoji.keywords
-    }
-
-    get groups() {
-      return this.$accessor.emoji.groups
-    }
-
-    get list() {
-      return this.$accessor.emoji.list
-    }
-
-    get filtered() {
-      const filtered = []
-      for (const emoji of this.list) {
-        if (
-          emoji.includes(this.search) || typeof this.keywords[emoji] !== 'undefined'
-            ? this.keywords[emoji].some((keyword) => keyword.includes(this.search))
-            : false
-        ) {
-          filtered.push(emoji)
-        }
-      }
-      return filtered
-    }
-
-    scrollTo(event: MouseEvent, index: number) {
-      if (!this._groups[index]) {
-        return
-      }
-      this._scroll.scrollTop = index == 0 ? 0 : this._groups[index].offsetTop
-    }
-
-    onScroll() {
-      if (!this.waitingForPaint) {
-        this.waitingForPaint = true
-        window.requestAnimationFrame(this.onScrollPaint.bind(this))
-      }
-    }
-
-    onScrollPaint() {
-      this.waitingForPaint = false
-      let scrollTop = this._scroll.scrollTop
-      let active = 0
-      for (const [i] of this.groups.entries()) {
-        let component = this._groups[i]
-        if (component && component.offsetTop > scrollTop) {
-          break
-        }
-        active = i
-      }
-      if (this.index !== active) {
-        this.index = active
-      }
-    }
-
-    onMouseExit() {
-      this.hovered = ''
-    }
-
-    onMouseEnter(event: MouseEvent, emoji: string) {
-      this.hovered = emoji
-      this._search.placeholder = `:${emoji}:`
-    }
-
-    onClick(event: MouseEvent, emoji: string) {
-      this.$accessor.emoji.setRecent(emoji)
-      this.$emit('picked', emoji)
-    }
-
-    onClickAway() {
-      this.$emit('done')
-    }
-  }
 </script>
+

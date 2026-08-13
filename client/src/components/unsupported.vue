@@ -68,8 +68,9 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-unsupported' })
-  export default class Unsupported extends Vue {}
+  export default defineComponent({
+    name: 'neko-unsupported',
+  })
 </script>

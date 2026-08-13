@@ -157,55 +157,54 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
   import { AdminLockResource } from '~/neko/messages'
 
-  @Component({ name: 'neko-settings' })
-  export default class Header extends Vue {
-    get admin() {
-      return this.$accessor.user.admin
-    }
-
-    get locked() {
-      return this.$accessor.locked
-    }
-
-    get side() {
-      return this.$accessor.client.side
-    }
-
-    get texts() {
-      return this.$accessor.chat.texts
-    }
-
-    get showBadge() {
-      return !this.side && this.readTexts != this.texts
-    }
-
-    get fileTransfer() {
-      return this.$accessor.remote.fileTransfer
-    }
-
-    toggleLock(resource: AdminLockResource) {
-      this.$accessor.toggleLock(resource)
-    }
-
-    isLocked(resource: AdminLockResource): boolean {
-      return this.$accessor.isLocked(resource)
-    }
-
-    readTexts: number = 0
-    toggleMenu() {
-      this.$accessor.client.toggleSide()
-      this.readTexts = this.texts
-    }
-
-    lockedTooltip(resource: AdminLockResource) {
-      if (this.admin) {
-        return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `unlock` : `lock`))
+  export default defineComponent({
+    name: 'neko-settings',
+    data() {
+      return {
+        readTexts: 0,
       }
+    },
+    computed: {
+      admin() {
+        return this.$accessor.user.admin
+      },
+      locked() {
+        return this.$accessor.locked
+      },
+      side() {
+        return this.$accessor.client.side
+      },
+      texts() {
+        return this.$accessor.chat.texts
+      },
+      showBadge() {
+        return !this.side && this.readTexts != this.texts
+      },
+      fileTransfer() {
+        return this.$accessor.remote.fileTransfer
+      },
+    },
+    methods: {
+      toggleLock(resource: AdminLockResource) {
+        this.$accessor.toggleLock(resource)
+      },
+      isLocked(resource: AdminLockResource): boolean {
+        return this.$accessor.isLocked(resource)
+      },
+      toggleMenu() {
+        this.$accessor.client.toggleSide()
+        this.readTexts = this.texts
+      },
+      lockedTooltip(resource: AdminLockResource) {
+        if (this.admin) {
+          return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `unlock` : `lock`))
+        }
 
-      return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `locked` : `unlocked`))
-    }
-  }
+        return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `locked` : `unlocked`))
+      },
+    },
+  })
 </script>

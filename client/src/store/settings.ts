@@ -1,92 +1,86 @@
-import { getterTree, mutationTree, actionTree } from 'typed-vuex'
+import { defineStore } from 'pinia'
 import { get, set } from '~/utils/localstorage'
 import { EVENT } from '~/neko/events'
-import { accessor } from '~/store'
-
-export const namespaced = true
 
 interface KeyboardLayouts {
   [code: string]: string
 }
 
-export const state = () => {
-  return {
-    scroll: get<number>('scroll', 10),
-    scroll_invert: get<boolean>('scroll_invert', true),
-    autoplay: get<boolean>('autoplay', true),
-    ignore_emotes: get<boolean>('ignore_emotes', false),
-    chat_sound: get<boolean>('chat_sound', true),
-    keyboard_layout: get<string>('keyboard_layout', 'us'),
+export const useSettingsStore = defineStore('settings', {
+  state: () => {
+    return {
+      scroll: get<number>('scroll', 10),
+      scroll_invert: get<boolean>('scroll_invert', true),
+      autoplay: get<boolean>('autoplay', true),
+      ignore_emotes: get<boolean>('ignore_emotes', false),
+      chat_sound: get<boolean>('chat_sound', true),
+      keyboard_layout: get<string>('keyboard_layout', 'us'),
 
-    keyboard_layouts_list: {} as KeyboardLayouts,
+      keyboard_layouts_list: {} as KeyboardLayouts,
 
-    broadcast_is_active: false,
-    broadcast_url: '',
-  }
-}
-
-export const getters = getterTree(state, {})
-
-export const mutations = mutationTree(state, {
-  setScroll(state, scroll: number) {
-    state.scroll = scroll
-    set('scroll', scroll)
+      broadcast_is_active: false,
+      broadcast_url: '',
+    }
   },
 
-  setInvert(state, value: boolean) {
-    state.scroll_invert = value
-    set('scroll_invert', value)
-  },
+  getters: {},
 
-  setAutoplay(state, value: boolean) {
-    state.autoplay = value
-    set('autoplay', value)
-  },
+  actions: {
+    setScroll(scroll: number) {
+      this.scroll = scroll
+      set('scroll', scroll)
+    },
 
-  setIgnore(state, value: boolean) {
-    state.ignore_emotes = value
-    set('ignore_emotes', value)
-  },
+    setInvert(value: boolean) {
+      this.scroll_invert = value
+      set('scroll_invert', value)
+    },
 
-  setSound(state, value: boolean) {
-    state.chat_sound = value
-    set('chat_sound', value)
-  },
+    setAutoplay(value: boolean) {
+      this.autoplay = value
+      set('autoplay', value)
+    },
 
-  setKeyboardLayout(state, value: string) {
-    state.keyboard_layout = value
-    set('keyboard_layout', value)
-  },
+    setIgnore(value: boolean) {
+      this.ignore_emotes = value
+      set('ignore_emotes', value)
+    },
 
-  setKeyboardLayoutsList(state, value: KeyboardLayouts) {
-    state.keyboard_layouts_list = value
-  },
-  setBroadcastStatus(state, { url, isActive }) {
-    state.broadcast_url = url
-    state.broadcast_is_active = isActive
-  },
-})
+    setSound(value: boolean) {
+      this.chat_sound = value
+      set('chat_sound', value)
+    },
 
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
+    setKeyboardLayout(value: string) {
+      this.keyboard_layout = value
+      set('keyboard_layout', value)
+    },
+
+    setKeyboardLayoutsList(value: KeyboardLayouts) {
+      this.keyboard_layouts_list = value
+    },
+    setBroadcastStatus({ url, isActive }: { url: string; isActive: boolean }) {
+      this.broadcast_url = url
+      this.broadcast_is_active = isActive
+    },
+
     async initialise() {
       try {
         const req = await $http.get<KeyboardLayouts>('keyboard_layouts.json')
-        accessor.settings.setKeyboardLayoutsList(req.data)
+        this.setKeyboardLayoutsList(req.data)
       } catch (err: any) {
         console.error(err)
       }
     },
 
-    broadcastStatus(store, { url, isActive }) {
-      accessor.settings.setBroadcastStatus({ url, isActive })
+    broadcastStatus({ url, isActive }: { url: string; isActive: boolean }) {
+      this.setBroadcastStatus({ url, isActive })
     },
-    broadcastCreate(store, url: string) {
+    broadcastCreate(url: string) {
       $client.sendMessage(EVENT.BROADCAST.CREATE, { url })
     },
     broadcastDestroy() {
       $client.sendMessage(EVENT.BROADCAST.DESTROY)
     },
   },
-)
+})

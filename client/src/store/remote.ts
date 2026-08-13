@@ -1,116 +1,117 @@
-import { getterTree, mutationTree, actionTree } from 'typed-vuex'
+import { defineStore } from 'pinia'
 import { Member } from '~/neko/types'
 import { EVENT } from '~/neko/events'
-import { accessor } from '~/store'
+import { useRootStore } from './index'
+import { useUserStore } from './user'
+import { useSettingsStore } from './settings'
 
 const keyboardModifierState = (capsLock: boolean, numLock: boolean, scrollLock: boolean) =>
   Number(capsLock) + 2 * Number(numLock) + 4 * Number(scrollLock)
 
-export const namespaced = true
+export const useRemoteStore = defineStore('remote', {
+  state: () => ({
+    id: '',
+    clipboard: '',
+    locked: false,
+    implicitHosting: true,
+    fileTransfer: true,
+    keyboardModifierState: -1,
+  }),
 
-export const state = () => ({
-  id: '',
-  clipboard: '',
-  locked: false,
-  implicitHosting: true,
-  fileTransfer: true,
-  keyboardModifierState: -1,
-})
-
-export const getters = getterTree(state, {
-  hosting: (state, getters, root) => {
-    return root.user.id === state.id || state.implicitHosting
-  },
-  hosted: (state) => {
-    return state.id !== '' || state.implicitHosting
-  },
-  host: (state, getters, root) => {
-    return root.user.members[state.id] || (state.implicitHosting && root.user.id) || null
-  },
-})
-
-export const mutations = mutationTree(state, {
-  setHost(state, host: string | Member) {
-    if (typeof host === 'string') {
-      state.id = host
-    } else {
-      state.id = host.id
-    }
+  getters: {
+    hosting: (state) => {
+      return useUserStore().id === state.id || state.implicitHosting
+    },
+    hosted: (state) => {
+      return state.id !== '' || state.implicitHosting
+    },
+    host: (state) => {
+      return useUserStore().members[state.id] || (state.implicitHosting && useUserStore().id) || null
+    },
   },
 
-  setClipboard(state, clipboard: string) {
-    state.clipboard = clipboard
-  },
+  actions: {
+    setHost(host: string | Member) {
+      if (typeof host === 'string') {
+        this.id = host
+      } else {
+        this.id = host.id
+      }
+    },
 
-  setKeyboardModifierState(state, { capsLock, numLock, scrollLock }) {
-    state.keyboardModifierState = keyboardModifierState(capsLock, numLock, scrollLock)
-  },
+    setClipboard(clipboard: string) {
+      this.clipboard = clipboard
+    },
 
-  setLocked(state, locked: boolean) {
-    state.locked = locked
-  },
+    setKeyboardModifierState({
+      capsLock,
+      numLock,
+      scrollLock,
+    }: { capsLock: boolean; numLock: boolean; scrollLock: boolean }) {
+      this.keyboardModifierState = keyboardModifierState(capsLock, numLock, scrollLock)
+    },
 
-  setImplicitHosting(state, val: boolean) {
-    state.implicitHosting = val
-  },
+    setLocked(locked: boolean) {
+      this.locked = locked
+    },
 
-  setFileTransfer(state, val: boolean) {
-    state.fileTransfer = val
-  },
+    setImplicitHosting(val: boolean) {
+      this.implicitHosting = val
+    },
 
-  reset(state) {
-    state.id = ''
-    state.clipboard = ''
-    state.locked = false
-  },
-})
+    setFileTransfer(val: boolean) {
+      this.fileTransfer = val
+    },
 
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
-    sendClipboard({ getters }, clipboard: string) {
-      if (!accessor.connected || !getters.hosting) {
+    reset() {
+      this.id = ''
+      this.clipboard = ''
+      this.locked = false
+    },
+
+    sendClipboard(clipboard: string) {
+      if (!useRootStore().connected || !this.hosting) {
         return
       }
 
       $client.sendMessage(EVENT.CONTROL.CLIPBOARD, { text: clipboard })
     },
 
-    toggle({ getters }) {
-      if (!accessor.connected) {
+    toggle() {
+      if (!useRootStore().connected) {
         return
       }
 
-      if (!getters.hosting) {
+      if (!this.hosting) {
         $client.sendMessage(EVENT.CONTROL.REQUEST)
       } else {
         $client.sendMessage(EVENT.CONTROL.RELEASE)
       }
     },
 
-    request({ getters }) {
-      if (!accessor.connected || getters.hosting) {
+    request() {
+      if (!useRootStore().connected || this.hosting) {
         return
       }
 
       $client.sendMessage(EVENT.CONTROL.REQUEST)
     },
 
-    release({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+    release() {
+      if (!useRootStore().connected || !this.hosting) {
         return
       }
 
       $client.sendMessage(EVENT.CONTROL.RELEASE)
     },
 
-    give({ getters }, member: string | Member) {
-      if (!accessor.connected || !getters.hosting) {
+    give(member: string | Member) {
+      if (!useRootStore().connected || !this.hosting) {
         return
       }
 
       if (typeof member === 'string') {
-        member = accessor.user.members[member]
+        member = useUserStore().members[member]
       }
 
       if (!member) {
@@ -121,7 +122,7 @@ export const actions = actionTree(
     },
 
     adminControl() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!useRootStore().connected || !useUserStore().admin) {
         return
       }
 
@@ -129,20 +130,20 @@ export const actions = actionTree(
     },
 
     adminRelease() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!useRootStore().connected || !useUserStore().admin) {
         return
       }
 
       $client.sendMessage(EVENT.ADMIN.RELEASE)
     },
 
-    adminGive(store, member: string | Member) {
-      if (!accessor.connected) {
+    adminGive(member: string | Member) {
+      if (!useRootStore().connected) {
         return
       }
 
       if (typeof member === 'string') {
-        member = accessor.user.members[member]
+        member = useUserStore().members[member]
       }
 
       if (!member) {
@@ -152,21 +153,25 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
     },
 
-    changeKeyboard({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+    changeKeyboard() {
+      if (!useRootStore().connected || !this.hosting) {
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
+      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: useSettingsStore().keyboard_layout })
     },
 
-    syncKeyboardModifierState({ state }, { capsLock, numLock, scrollLock }) {
-      if (state.keyboardModifierState === keyboardModifierState(capsLock, numLock, scrollLock)) {
+    syncKeyboardModifierState({
+      capsLock,
+      numLock,
+      scrollLock,
+    }: { capsLock: boolean; numLock: boolean; scrollLock: boolean }) {
+      if (this.keyboardModifierState === keyboardModifierState(capsLock, numLock, scrollLock)) {
         return
       }
 
-      accessor.remote.setKeyboardModifierState({ capsLock, numLock, scrollLock })
+      this.setKeyboardModifierState({ capsLock, numLock, scrollLock })
       $client.sendMessage(EVENT.CONTROL.KEYBOARD, { capsLock, numLock, scrollLock })
     },
   },
-)
+})

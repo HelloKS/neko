@@ -1,4 +1,4 @@
-import { PluginObject } from 'vue'
+import type { App } from 'vue'
 import axios, { AxiosStatic } from 'axios'
 
 declare global {
@@ -9,16 +9,16 @@ declare global {
   }
 }
 
-declare module 'vue/types/vue' {
-  interface Vue {
+declare module 'vue' {
+  interface ComponentCustomProperties {
     $http: AxiosStatic
   }
 }
 
-const plugin: PluginObject<undefined> = {
-  install(Vue) {
+const plugin = {
+  install(app: App) {
     window.$http = axios
-    Vue.prototype.$http = window.$http
+    app.config.globalProperties.$http = window.$http
   },
 }
 

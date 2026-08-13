@@ -1,9 +1,9 @@
-import { getterTree, mutationTree, actionTree } from 'typed-vuex'
+import { defineStore } from 'pinia'
 import { makeid } from '~/utils'
 import { EVENT } from '~/neko/events'
-import { accessor } from '~/store'
-
-export const namespaced = true
+import { useRootStore } from './index'
+import { useSettingsStore } from './settings'
+import { useUserStore } from './user'
 
 interface Emote {
   type: string
@@ -20,78 +20,75 @@ interface Message {
   type: 'text' | 'event'
 }
 
-export const state = () => ({
-  history: [] as Message[],
-  emotes: {} as Emotes,
-  texts: 0,
-})
+export const useChatStore = defineStore('chat', {
+  state: () => ({
+    history: [] as Message[],
+    emotes: {} as Emotes,
+    texts: 0,
+  }),
 
-export const getters = getterTree(state, {
-  //
-})
-
-export const mutations = mutationTree(state, {
-  addMessage(state, message: Message) {
-    if (message.type == 'text') {
-      state.texts++
-    }
-
-    state.history = state.history.concat([message])
+  getters: {
+    //
   },
 
-  addEmote(state, { id, emote }: { id: string; emote: Emote }) {
-    state.emotes = {
-      ...state.emotes,
-      [id]: emote,
-    }
-  },
+  actions: {
+    addMessage(message: Message) {
+      if (message.type == 'text') {
+        this.texts++
+      }
 
-  delEmote(state, id: string) {
-    const emotes = {
-      ...state.emotes,
-    }
-    delete emotes[id]
-    state.emotes = emotes
-  },
+      this.history = this.history.concat([message])
+    },
 
-  reset(state) {
-    state.emotes = {}
-    state.history = []
-    state.texts = 0
-  },
-})
+    addEmote({ id, emote }: { id: string; emote: Emote }) {
+      this.emotes = {
+        ...this.emotes,
+        [id]: emote,
+      }
+    },
 
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
-    newEmote(store, emote: Emote) {
-      if (accessor.settings.ignore_emotes || document.visibilityState === 'hidden') {
+    delEmote(id: string) {
+      const emotes = {
+        ...this.emotes,
+      }
+      delete emotes[id]
+      this.emotes = emotes
+    },
+
+    reset() {
+      this.emotes = {}
+      this.history = []
+      this.texts = 0
+    },
+
+    newEmote(emote: Emote) {
+      if (useSettingsStore().ignore_emotes || document.visibilityState === 'hidden') {
         return
       }
 
       const id = makeid(10)
-      accessor.chat.addEmote({ id, emote })
+      this.addEmote({ id, emote })
     },
 
-    newMessage(store, message: Message) {
-      if (accessor.settings.chat_sound) {
+    newMessage(message: Message) {
+      if (useSettingsStore().chat_sound) {
         new Audio('chat.mp3').play().catch(console.error)
       }
-      accessor.chat.addMessage(message)
+      this.addMessage(message)
     },
 
-    sendMessage(store, content: string) {
-      if (!accessor.connected || accessor.user.muted) {
+    sendMessage(content: string) {
+      if (!useRootStore().connected || useUserStore().muted) {
         return
       }
       $client.sendMessage(EVENT.CHAT.MESSAGE, { content })
     },
 
-    sendEmote(store, emote: string) {
-      if (!accessor.connected || accessor.user.muted) {
+    sendEmote(emote: string) {
+      if (!useRootStore().connected || useUserStore().muted) {
         return
       }
       $client.sendMessage(EVENT.CHAT.EMOTE, { emote })
     },
   },
-)
+})

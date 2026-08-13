@@ -175,7 +175,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
   import Connect from '~/components/connect.vue'
   import Video from '~/components/video.vue'
@@ -187,7 +187,7 @@
   import Header from '~/components/header.vue'
   import Unsupported from '~/components/unsupported.vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko',
     components: {
       'neko-connect': Connect,
@@ -200,78 +200,84 @@
       'neko-header': Header,
       'neko-unsupported': Unsupported,
     },
+    data() {
+      return {
+        shakeKbd: false,
+      }
+    },
+    computed: {
+      video() {
+        return this.$refs.video as any
+      },
+      volume() {
+        const numberParam = parseFloat(new URL(location.href).searchParams.get('volume') || '1.0')
+        return Math.max(0.0, Math.min(!isNaN(numberParam) ? numberParam * 100 : 100, 100))
+      },
+      isCastMode() {
+        return !!new URL(location.href).searchParams.get('cast')
+      },
+      isChatMode() {
+        return !!new URL(location.href).searchParams.get('chat')
+      },
+      isEmbedMode() {
+        return !!new URL(location.href).searchParams.get('embed')
+      },
+      hideControls() {
+        return this.isCastMode
+      },
+      chatOnly() {
+        return this.isChatMode
+      },
+      videoOnly() {
+        return this.isCastMode || this.isEmbedMode
+      },
+      about() {
+        return this.$accessor.client.about
+      },
+      side() {
+        return this.$accessor.client.side
+      },
+      connected() {
+        return this.$accessor.connected
+      },
+    },
+    watch: {
+      volume: {
+        immediate: true,
+        handler(volume: number) {
+          this.$accessor.video.setVolume(volume)
+        },
+      },
+      hideControls: {
+        immediate: true,
+        handler(enabled: boolean) {
+          if (enabled) {
+            this.$accessor.video.setMuted(false)
+            this.$accessor.settings.setSound(false)
+          }
+        },
+      },
+      chatOnly: {
+        immediate: true,
+        handler(enabled: boolean) {
+          if (enabled) {
+            this.$accessor.video.reset()
+          }
+        },
+      },
+    },
+    methods: {
+      controlAttempt() {
+        if (this.shakeKbd || this.$accessor.remote.hosted) return
+
+        this.shakeKbd = true
+        window.setTimeout(() => (this.shakeKbd = false), 5000)
+      },
+    },
+    created() {
+      ;(this as any).$client.init(this)
+      this.$accessor.initialise()
+    },
   })
-  export default class App extends Vue {
-    @Ref('video') video!: Video
-
-    shakeKbd = false
-
-    get volume() {
-      const numberParam = parseFloat(new URL(location.href).searchParams.get('volume') || '1.0')
-      return Math.max(0.0, Math.min(!isNaN(numberParam) ? numberParam * 100 : 100, 100))
-    }
-
-    get isCastMode() {
-      return !!new URL(location.href).searchParams.get('cast')
-    }
-
-    get isChatMode() {
-      return !!new URL(location.href).searchParams.get('chat')
-    }
-    
-    get isEmbedMode() {
-      return !!new URL(location.href).searchParams.get('embed')
-    }
-
-    get hideControls() {
-      return this.isCastMode
-    }
-
-    get chatOnly() {
-      return this.isChatMode
-    }
-
-    get videoOnly() {
-      return this.isCastMode || this.isEmbedMode
-    }
-
-    @Watch('volume', { immediate: true })
-    onVolume(volume: number) {
-      this.$accessor.video.setVolume(volume)
-    }
-
-    @Watch('hideControls', { immediate: true })
-    onHideControls(enabled: boolean) {
-      if (enabled) {
-        this.$accessor.video.setMuted(false)
-        this.$accessor.settings.setSound(false)
-      }
-    }
-
-    @Watch('chatOnly', { immediate: true })
-    onChatOnly(enabled: boolean) {
-      if (enabled) {
-        this.$accessor.video.reset()
-      }
-    }
-
-    controlAttempt() {
-      if (this.shakeKbd || this.$accessor.remote.hosted) return
-
-      this.shakeKbd = true
-      window.setTimeout(() => (this.shakeKbd = false), 5000)
-    }
-
-    get about() {
-      return this.$accessor.client.about
-    }
-
-    get side() {
-      return this.$accessor.client.side
-    }
-
-    get connected() {
-      return this.$accessor.connected
-    }
-  }
 </script>
+

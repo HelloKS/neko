@@ -36,41 +36,46 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-clipboard',
-  })
-  export default class Clipboard extends Vue {
-    @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
-
-    private opened: boolean = false
-    private typing?: number
-
-    get clipboard() {
-      return this.$accessor.remote.clipboard
-    }
-
-    set clipboard(data: string) {
-      this.$accessor.remote.setClipboard(data)
-
-      if (this.typing) {
-        clearTimeout(this.typing)
-        this.typing = undefined
+    data() {
+      return {
+        opened: false,
+        typing: undefined as number | undefined,
       }
+    },
+    computed: {
+      _textarea() {
+        return this.$refs.textarea as HTMLTextAreaElement
+      },
+      clipboard: {
+        get(): string {
+          return this.$accessor.remote.clipboard
+        },
+        set(data: string) {
+          this.$accessor.remote.setClipboard(data)
 
-      this.typing = window.setTimeout(() => this.$accessor.remote.sendClipboard(this.clipboard), 500)
-    }
+          if (this.typing) {
+            clearTimeout(this.typing)
+            this.typing = undefined
+          }
 
-    open() {
-      this.opened = true
-      document.body.addEventListener('click', this.close)
-      window.setTimeout(() => this._textarea.focus(), 0)
-    }
-
-    close() {
-      this.opened = false
-      document.body.removeEventListener('click', this.close)
-    }
-  }
+          this.typing = window.setTimeout(() => this.$accessor.remote.sendClipboard(this.clipboard), 500)
+        },
+      },
+    },
+    methods: {
+      open() {
+        this.opened = true
+        document.body.addEventListener('click', this.close)
+        window.setTimeout(() => this._textarea.focus(), 0)
+      },
+      close() {
+        this.opened = false
+        document.body.removeEventListener('click', this.close)
+      },
+    },
+  })
 </script>

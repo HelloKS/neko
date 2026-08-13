@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue2'
+import vue from '@vitejs/plugin-vue'
 
 const srcDir = fileURLToPath(new URL('./src', import.meta.url))
 
@@ -11,13 +11,13 @@ export default defineConfig({
   base: './',
   resolve: {
     alias: [
-      // vue must resolve to the full build (includes the template compiler):
-      // src/components/markdown.ts renders a runtime string template via
-      // h({ template: ... }), which is unavailable in the runtime-only build.
-      // This preserves the previous vue$ webpack alias from vue.config.js.
+      // vue must resolve to the full build (includes the runtime template
+      // compiler): src/components/markdown.ts renders a runtime string template
+      // via h({ template: ... }), which is unavailable in the runtime-only
+      // build. This preserves the previous vue$ webpack alias from vue.config.js.
       {
         find: /^vue$/,
-        replacement: fileURLToPath(new URL('./node_modules/vue/dist/vue.esm.js', import.meta.url)),
+        replacement: fileURLToPath(new URL('./node_modules/vue/dist/vue.esm-bundler.js', import.meta.url)),
       },
       { find: '~', replacement: srcDir },
       { find: '@', replacement: srcDir },

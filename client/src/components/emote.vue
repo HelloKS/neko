@@ -31,23 +31,26 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue, Prop } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-emote' })
-  export default class Emote extends Vue {
-    @Prop({
-      required: true,
-    })
-    id!: string
-
-    @Ref('emote') container!: HTMLElement
-
-    get emote() {
-      return this.$accessor.chat.emotes[this.id]
-    }
-
-    private classes: string[] = []
-
+  export default defineComponent({
+    name: 'neko-emote',
+    props: {
+      id: { type: String, required: true },
+    },
+    data() {
+      return {
+        classes: [] as string[],
+      }
+    },
+    computed: {
+      container() {
+        return this.$refs.emote as HTMLElement
+      },
+      emote() {
+        return this.$accessor.chat.emotes[this.id]
+      },
+    },
     mounted() {
       const range = 50
       let count = 0
@@ -67,11 +70,6 @@
             { left: `${count % 2 ? this.$anime.random(-range, 0) : this.$anime.random(0, range)}%`, opacity: 0.5 },
             { left: `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}%`, opacity: 0 },
           ],
-          elasticity: 600,
-          rotate: this.$anime.random(-35, 35),
-          top: `${this.$anime.random(-200, -600)}%`,
-          duration: this.$anime.random(1000, 2000),
-          easing: 'easeInOutQuad',
         })
 
         count++
@@ -82,6 +80,6 @@
         this.$emit('done', this.id)
         this.$accessor.chat.delEmote(this.id)
       })
-    }
-  }
+    },
+  })
 </script>

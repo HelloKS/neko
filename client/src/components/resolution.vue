@@ -1,8 +1,7 @@
 <template>
   <vue-context class="context" ref="context">
-    <template v-for="(conf, i) in configurations">
+    <template v-for="(conf, i) in configurations" :key="i">
       <li
-        :key="i"
         @click="screenSet(conf)"
         :class="[conf.width === width && conf.height === height && conf.rate === rate ? 'active' : '']"
       >
@@ -97,43 +96,40 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Vue } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
   import { ScreenResolution } from '~/neko/types'
 
-  // @ts-ignore
-  import { VueContext } from 'vue-context'
+  import VueContext from './vue-context.vue'
 
-  @Component({
+  export default defineComponent({
     name: 'neko-resolution',
     components: {
       'vue-context': VueContext,
     },
+    computed: {
+      context() {
+        return this.$refs.context as any
+      },
+      width() {
+        return this.$accessor.video.width
+      },
+      height() {
+        return this.$accessor.video.height
+      },
+      rate() {
+        return this.$accessor.video.rate
+      },
+      configurations() {
+        return this.$accessor.video.configurations
+      },
+    },
+    methods: {
+      open(event: MouseEvent) {
+        this.context.open(event)
+      },
+      screenSet(resolution: ScreenResolution) {
+        this.$accessor.video.screenSet(resolution)
+      },
+    },
   })
-  export default class Resolution extends Vue {
-    @Ref('context') readonly context!: VueContext
-
-    get width() {
-      return this.$accessor.video.width
-    }
-
-    get height() {
-      return this.$accessor.video.height
-    }
-
-    get rate() {
-      return this.$accessor.video.rate
-    }
-
-    get configurations() {
-      return this.$accessor.video.configurations
-    }
-
-    open(event: MouseEvent) {
-      this.context.open(event)
-    }
-
-    screenSet(resolution: ScreenResolution) {
-      this.$accessor.video.screenSet(resolution)
-    }
-  }
 </script>

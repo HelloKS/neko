@@ -1,72 +1,69 @@
-import { actionTree, getterTree, mutationTree } from 'typed-vuex'
+import { defineStore } from 'pinia'
 import { FileListItem, FileTransfer } from '~/neko/types'
 import { EVENT } from '~/neko/events'
-import { accessor } from '~/store'
+import { useRootStore } from './index'
 
-export const state = () => ({
-  cwd: '',
-  files: [] as FileListItem[],
-  transfers: [] as FileTransfer[],
-})
+export const useFilesStore = defineStore('files', {
+  state: () => ({
+    cwd: '',
+    files: [] as FileListItem[],
+    transfers: [] as FileTransfer[],
+  }),
 
-export const getters = getterTree(state, {
-  //
-})
-
-export const mutations = mutationTree(state, {
-  _setCwd(state, cwd: string) {
-    state.cwd = cwd
+  getters: {
+    //
   },
 
-  _setFileList(state, files: FileListItem[]) {
-    state.files = files
-  },
-
-  _addTransfer(state, transfer: FileTransfer) {
-    state.transfers = [...state.transfers, transfer]
-  },
-
-  _removeTransfer(state, transfer: FileTransfer) {
-    state.transfers = state.transfers.filter((t) => t.id !== transfer.id)
-  },
-})
-
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
-    setCwd(store, cwd: string) {
-      accessor.files._setCwd(cwd)
+  actions: {
+    _setCwd(cwd: string) {
+      this.cwd = cwd
     },
 
-    setFileList(store, files: FileListItem[]) {
-      accessor.files._setFileList(files)
+    _setFileList(files: FileListItem[]) {
+      this.files = files
     },
 
-    addTransfer(store, transfer: FileTransfer) {
+    _addTransfer(transfer: FileTransfer) {
+      this.transfers = [...this.transfers, transfer]
+    },
+
+    _removeTransfer(transfer: FileTransfer) {
+      this.transfers = this.transfers.filter((t) => t.id !== transfer.id)
+    },
+
+    setCwd(cwd: string) {
+      this._setCwd(cwd)
+    },
+
+    setFileList(files: FileListItem[]) {
+      this._setFileList(files)
+    },
+
+    addTransfer(transfer: FileTransfer) {
       if (transfer.status !== 'pending') {
         return
       }
-      accessor.files._addTransfer(transfer)
+      this._addTransfer(transfer)
     },
 
-    removeTransfer(store, transfer: FileTransfer) {
-      accessor.files._removeTransfer(transfer)
+    removeTransfer(transfer: FileTransfer) {
+      this._removeTransfer(transfer)
     },
 
     cancelAllTransfers() {
-      for (const t of accessor.files.transfers) {
+      for (const t of this.transfers) {
         if (t.status !== 'completed') {
           t.abortController?.abort()
         }
-        accessor.files.removeTransfer(t)
+        this.removeTransfer(t)
       }
     },
 
     refresh() {
-      if (!accessor.connected) {
+      if (!useRootStore().connected) {
         return
       }
       $client.sendMessage(EVENT.FILETRANSFER.REFRESH)
     },
   },
-)
+})

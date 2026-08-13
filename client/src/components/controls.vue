@@ -252,72 +252,69 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { defineComponent } from 'vue'
 
-  @Component({ name: 'neko-controls' })
-  export default class Controls extends Vue {
-    @Prop(Boolean) readonly shakeKbd!: boolean
-
-    get controlLocked() {
-      return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
-    }
-
-    get disabeld() {
-      return this.$accessor.remote.hosted
-    }
-
-    get hosting() {
-      return this.$accessor.remote.hosting
-    }
-
-    get implicitHosting() {
-      return this.$accessor.remote.implicitHosting
-    }
-
-    get volume() {
-      return this.$accessor.video.volume
-    }
-
-    set volume(volume: number) {
-      this.$accessor.video.setVolume(volume)
-    }
-
-    get muted() {
-      return this.$accessor.video.muted || this.volume === 0
-    }
-
-    get playing() {
-      return this.$accessor.video.playing
-    }
-
-    get playable() {
-      return this.$accessor.video.playable
-    }
-
-    get locked() {
-      return this.$accessor.remote.locked && this.$accessor.remote.hosting
-    }
-
-    set locked(locked: boolean) {
-      this.$accessor.remote.setLocked(locked)
-    }
-
-    toggleControl() {
-      if (!this.playable) {
-        return
-      }
-      this.$accessor.remote.toggle()
-    }
-
-    toggleMedia() {
-      if (!this.playable) {
-        return
-      }
-      this.$accessor.video.togglePlay()
-    }
-
-    toggleMute() {
-      this.$accessor.video.toggleMute()
-    }
-  }
+  export default defineComponent({
+    name: 'neko-controls',
+    props: {
+      shakeKbd: { type: Boolean },
+    },
+    computed: {
+      controlLocked() {
+        return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
+      },
+      disabeld() {
+        return this.$accessor.remote.hosted
+      },
+      hosting() {
+        return this.$accessor.remote.hosting
+      },
+      implicitHosting() {
+        return this.$accessor.remote.implicitHosting
+      },
+      volume: {
+        get(): number {
+          return this.$accessor.video.volume
+        },
+        set(volume: number) {
+          this.$accessor.video.setVolume(volume)
+        },
+      },
+      muted() {
+        return this.$accessor.video.muted || this.volume === 0
+      },
+      playing() {
+        return this.$accessor.video.playing
+      },
+      playable() {
+        return this.$accessor.video.playable
+      },
+      locked: {
+        get(): boolean {
+          return this.$accessor.remote.locked && this.$accessor.remote.hosting
+        },
+        set(locked: boolean) {
+          this.$accessor.remote.setLocked(locked)
+        },
+      },
+    },
+    methods: {
+      toggleControl() {
+        if (!this.playable) {
+          return
+        }
+        this.$accessor.remote.toggle()
+      },
+      toggleMedia() {
+        if (!this.playable) {
+          return
+        }
+        this.$accessor.video.togglePlay()
+      },
+      toggleMute() {
+        this.$accessor.video.toggleMute()
+      },
+    },
+  })
 </script>
+
