@@ -195,7 +195,6 @@
 
 <script lang="ts">
   import { defineComponent } from 'vue'
-  import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
 
   import Emote from './emote.vue'
