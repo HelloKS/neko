@@ -7,7 +7,10 @@ import type { Directive, DirectiveBinding } from 'vue'
 export const onClickaway: Directive<HTMLElement, (event: Event) => void> = {
   mounted(el, binding: DirectiveBinding<(event: Event) => void>) {
     const handler = (event: Event) => {
-      if (!el.contains(event.target as Node)) {
+      const target = event.target as Node
+      // mirror vue-clickaway: only treat real in-document clicks as outside
+      // clicks (ignores clicks on the document root itself / detached nodes)
+      if (document.documentElement.contains(target) && !el.contains(target)) {
         binding.value(event)
       }
     }

@@ -129,12 +129,20 @@
           this.onTabChange()
         },
       },
-      filetransferAllowed: {
-        immediate: true,
-        handler() {
-          this.onTabChange()
+      filetransferAllowed: [
+        {
+          immediate: true,
+          handler() {
+            this.onTabChange()
+          },
         },
-      },
+        {
+          // refresh the file list when transfers become allowed
+          handler() {
+            this.onFileTransferAllowedChange()
+          },
+        },
+      ],
     },
     methods: {
       onTabChange() {
