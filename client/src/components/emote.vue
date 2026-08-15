@@ -70,6 +70,11 @@
             { left: `${count % 2 ? this.$anime.random(-range, 0) : this.$anime.random(0, range)}%`, opacity: 0.5 },
             { left: `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}%`, opacity: 0 },
           ],
+          elasticity: 600,
+          rotate: this.$anime.random(-35, 35),
+          top: `${this.$anime.random(-200, -600)}%`,
+          duration: this.$anime.random(1000, 2000),
+          easing: 'easeInOutQuad',
         })
 
         count++
