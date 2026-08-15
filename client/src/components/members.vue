@@ -2,22 +2,22 @@
   <div class="members">
     <div class="members-container">
       <ul class="members-list">
-        <li v-if="member">
+        <li v-if="member" class="member-row">
           <div :class="[{ host: member.id === host }, 'self', 'member']">
-            <neko-avatar class="avatar" :seed="member.displayname" :size="50" />
+            <neko-avatar class="avatar" :seed="member.displayname" :size="40" />
           </div>
+          <span class="name">{{ member.displayname }}</span>
         </li>
         <template v-for="(member, index) in members" :key="index">
           <li
             v-if="member.id !== id && member.connected"
-            v-tooltip="{ content: member.displayname, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
+            class="member-row"
+            @contextmenu.stop.prevent="onContext($event, { member })"
           >
-            <div
-              :class="[{ host: member.id === host, admin: member.admin }, 'member']"
-              @contextmenu.stop.prevent="onContext($event, { member })"
-            >
-              <neko-avatar class="avatar" :seed="member.displayname" :size="50" />
+            <div :class="[{ host: member.id === host, admin: member.admin }, 'member']">
+              <neko-avatar class="avatar" :seed="member.displayname" :size="40" />
             </div>
+            <span class="name">{{ member.displayname }}</span>
           </li>
         </template>
       </ul>
@@ -29,7 +29,7 @@
 <style lang="scss" scoped>
   .members {
     flex: 1;
-    overflow-y: scroll;
+    overflow-y: auto;
     padding-bottom: 14px;
     scrollbar-width: thin;
     scrollbar-color: $background-secondary $background-tertiary;
@@ -37,7 +37,7 @@
     display: flex;
 
     &::-webkit-scrollbar {
-      height: 4px;
+      width: 4px;
     }
 
     &::-webkit-scrollbar-track {
@@ -54,24 +54,30 @@
     }
 
     .members-container {
-      display: block;
-      clear: both;
-      padding: 0 20px;
-      margin: 0 auto;
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
 
       .members-list {
-        white-space: nowrap;
-        clear: both;
+        display: flex;
+        flex-direction: column;
 
-        li {
-          display: inline-block;
+        .member-row {
+          display: flex;
+          align-items: center;
+          padding: 6px 8px;
+          border-radius: 4px;
+          user-select: none;
+
+          &:hover {
+            background: $background-modifier-hover;
+          }
 
           .member {
             position: relative;
-            display: block;
-            width: 50px;
-            height: 50px;
-            margin: 10px 5px 0 5px;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
 
             &.self {
               &::before {
@@ -87,7 +93,7 @@
                 font-size: 20px;
                 text-align: center;
                 margin-top: -2px;
-                margin-left: 40px;
+                margin-left: 30px;
                 border-radius: 50%;
               }
             }
@@ -106,7 +112,7 @@
                 font-size: 14px;
                 text-align: center;
                 margin-top: -2px;
-                margin-left: 44px;
+                margin-left: 34px;
               }
             }
 
@@ -123,8 +129,8 @@
               line-height: 20px;
               font-size: 10px;
               text-align: center;
-              margin-top: 42px;
-              margin-left: -18px;
+              margin-top: 32px;
+              margin-left: -16px;
               border-radius: 50%;
             }
 
@@ -132,21 +138,17 @@
               border-radius: 50%;
               overflow: hidden;
               width: 100%;
+              height: 100%;
             }
           }
 
-          &:nth-child(2) {
-            margin-left: 20px;
-
-            &::before {
-              position: absolute;
-              content: ' ';
-              height: 45px;
-              width: 2px;
-              background: $background-secondary;
-              margin-top: 13px;
-              margin-left: -9px;
-            }
+          .name {
+            margin-left: 12px;
+            color: $text-normal;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
         }
       }
