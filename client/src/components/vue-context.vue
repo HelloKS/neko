@@ -36,6 +36,20 @@
         this.x = event.clientX
         this.y = event.clientY
         this.visible = true
+
+        // Flip the menu into the viewport when it would overflow the
+        // bottom/right edge (e.g. the emote menu in the bottom control bar
+        // opens upward instead of below the click point).
+        this.$nextTick(() => {
+          const rect = (this.$el as HTMLElement).getBoundingClientRect()
+          if (rect.bottom > window.innerHeight) {
+            this.y = Math.max(0, this.y - rect.height)
+          }
+          if (rect.right > window.innerWidth) {
+            this.x = Math.max(0, this.x - rect.width)
+          }
+        })
+
         document.addEventListener('click', this.close)
         document.addEventListener('scroll', this.close, true)
         window.addEventListener('resize', this.close)

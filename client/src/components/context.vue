@@ -1,6 +1,7 @@
 <template>
   <vue-context class="context" ref="context">
-    <template v-slot="child" v-if="child.data">
+    <template v-slot="child">
+      <template v-if="child.data">
       <li class="header">
         <div class="user">
           <neko-avatar class="avatar" :seed="child.data.member.displayname" :size="25" />
@@ -44,6 +45,7 @@
         <li>
           <span @click="ban(child.data.member)" style="color: #f04747">{{ $t('context.ban') }}</span>
         </li>
+      </template>
       </template>
     </template>
   </vue-context>

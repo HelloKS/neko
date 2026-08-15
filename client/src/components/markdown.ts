@@ -1,5 +1,5 @@
 import md, { SingleNodeParserRule, HtmlOutputRule, defaultRules, State, Rules } from 'simple-markdown'
-import { defineComponent } from 'vue'
+import { defineComponent, h } from 'vue'
 
 const { blockQuote, inlineCode, codeBlock, autolink, newline, escape, strong, text, link, url, em, u, br } =
   defaultRules
@@ -273,7 +273,7 @@ export default defineComponent({
   props: {
     source: { type: String, required: true },
   },
-  render(h: any) {
+  render() {
     const state: MarkdownState = {
       inline: true,
       inQuote: false,
