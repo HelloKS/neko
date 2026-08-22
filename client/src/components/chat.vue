@@ -39,7 +39,7 @@
     </ul>
     <neko-context ref="context" />
     <div class="chat-scroll-to-bottom">
-      <i class="fas fa-angle-double-down" @click="() => { _history.scrollTop = _history.scrollHeight }" />
+      <i class="fas fa-angle-double-down" @click="scrollToBottom" />
     </div>
     <div v-if="!muted" class="chat-send">
       <div class="accent" />
@@ -449,13 +449,7 @@
       history() {
         this.$nextTick(() => {
           if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120) {
-            setTimeout(() => {
-              this._history.scrollTop = this._history.scrollHeight
-
-              if (this.history.length > 200) {
-                this.history.splice(0, this.history.length - 200)
-              }
-            }, 100)
+            this.scrollToBottom()
           }
         })
       },
@@ -589,16 +583,49 @@
           this.$accessor.chat.sendMessage(this.content)
           this.content = ''
           this.$nextTick(() => {
-            this._history.scrollTop = this._history.scrollHeight
+            this.scrollToBottom()
           })
 
           return
         }
       },
+      scrollToBottom() {
+        const images = Array.from(this._history.querySelectorAll('img'))
+        const pending = images.filter((img) => !img.complete)
+
+        const scroll = () => {
+          this._history.scrollTop = this._history.scrollHeight
+
+          if (this.history.length > 200) {
+            this.history.splice(0, this.history.length - 200)
+          }
+        }
+
+        if (pending.length === 0) {
+          scroll()
+          return
+        }
+
+        let remaining = pending.length
+        const onImage = () => {
+          remaining -= 1
+          if (remaining === 0) {
+            pending.forEach((img) => {
+              img.removeEventListener('load', onImage)
+              img.removeEventListener('error', onImage)
+            })
+            scroll()
+          }
+        }
+        pending.forEach((img) => {
+          img.addEventListener('load', onImage)
+          img.addEventListener('error', onImage)
+        })
+      },
     },
     mounted() {
       this.$nextTick(() => {
-        this._history.scrollTop = this._history.scrollHeight
+        this.scrollToBottom()
       })
     },
   })
