@@ -447,8 +447,15 @@
     },
     watch: {
       history() {
+        // Measure "was at bottom" BEFORE the new message is rendered (watchers run
+        // pre-DOM-update). Evaluating this in $nextTick instead would compare against
+        // a scrollHeight that already includes the new message, so any message
+        // taller than the threshold (long text, images) would never auto-scroll.
+        const wasAtBottom =
+          this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120
+
         this.$nextTick(() => {
-          if (this._history.scrollTop + this._history.clientHeight >= this._history.scrollHeight - 120) {
+          if (wasAtBottom) {
             this.scrollToBottom()
           }
         })
@@ -590,9 +597,6 @@
         }
       },
       scrollToBottom() {
-        const images = Array.from(this._history.querySelectorAll('img'))
-        const pending = images.filter((img) => !img.complete)
-
         const scroll = () => {
           this._history.scrollTop = this._history.scrollHeight
 
@@ -601,25 +605,32 @@
           }
         }
 
-        if (pending.length === 0) {
+        this.$nextTick(() => {
           scroll()
-          return
-        }
 
-        let remaining = pending.length
-        const onImage = () => {
-          remaining -= 1
-          if (remaining === 0) {
-            pending.forEach((img) => {
-              img.removeEventListener('load', onImage)
-              img.removeEventListener('error', onImage)
-            })
-            scroll()
+          // Re-scroll once images have loaded and taken up layout space.
+          // Data-URL images report complete=true before they are decoded, so
+          // img.complete cannot be trusted here; listen for load/error instead
+          // and do a final pass after layout settles.
+          const images = Array.from(this._history.querySelectorAll('img'))
+          let remaining = images.length
+          const onImage = () => {
+            remaining -= 1
+            if (remaining <= 0) {
+              images.forEach((img) => {
+                img.removeEventListener('load', onImage)
+                img.removeEventListener('error', onImage)
+              })
+              scroll()
+            }
           }
-        }
-        pending.forEach((img) => {
-          img.addEventListener('load', onImage)
-          img.addEventListener('error', onImage)
+          images.forEach((img) => {
+            img.addEventListener('load', onImage)
+            img.addEventListener('error', onImage)
+          })
+          requestAnimationFrame(() => {
+            requestAnimationFrame(scroll)
+          })
         })
       },
     },
